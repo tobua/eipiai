@@ -1,0 +1,78 @@
+{
+  "name": "eipiai",
+  "description": "The simplest way to connect a client to a server while bypassing any HTTP features designed for server-side rendering.",
+  "version": "0.0.0-development",
+  "repository": "github:tobua/eipiai",
+  "license": "MIT",
+  "author": "Matthias Giger",
+  "scripts": {
+    "check": "biome check --write .",
+    "types": "tsc && tsc --noEmit --project ./test/tsconfig.json"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@types/bun": "^1.1.9",
+    "elysia": "^1.1.12",
+    "typescript": "^5.6.2",
+    "zero-configuration": "^0.17.3"
+  },
+  "trustedDependencies": [
+    "zero-configuration"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "*.ts"
+  ],
+  "keywords": [
+    "api",
+    "rpc"
+  ],
+  "publishConfig": {
+    "provenance": false
+  },
+  "configuration": {
+    "gitignore": "recommended",
+    "vscode": "biome",
+    "license": "MIT",
+    "biome": {
+      "extends": "recommended",
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noNodejsModules": "off",
+            "useImportExtensions": "off"
+          },
+          "suspicious": {
+            "noConsoleLog": "off",
+            "noConsole": "off"
+          }
+        }
+      },
+      "files": {
+        "ignore": [
+          "demo"
+        ]
+      }
+    },
+    "typescript": [
+      {
+        "extends": "plugin",
+        "files": [
+          "index.ts"
+        ]
+      },
+      {
+        "extends": "../tsconfig.json",
+        "folder": "test",
+        "compilerOptions": {
+          "strict": false
+        }
+      }
+    ]
+  }
+}
