@@ -17,4 +17,6 @@ test('Initializes client and returns data.', async () => {
 
   expect(typeof data.getPost).toBe('function')
   expect(await data.getPost(3)).toEqual({ error: false, data: [3] })
+  // @ts-expect-error
+  expect(await data.getPost(3, 'missing parameter')).toEqual({ error: false, data: [3] })
 })

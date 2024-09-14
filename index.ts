@@ -1,14 +1,17 @@
-// biome-ignore lint/complexity/noBannedTypes: Improve TODO
-export function api(method: { [key: string]: Function }) {
+import type { JsonSerializable, Methods } from './types'
+
+export function api<T extends Methods>(
+  method: T,
+): { [K in keyof T]: (...args: Parameters<T[K]>) => Promise<{ error: boolean; data: ReturnType<T[K]> }> } {
   return method
 }
 
-export function client<T extends ReturnType<typeof api>>(): T {
+export function client<T extends ReturnType<typeof api>>(url = 'http://localhost:1000/api'): T {
   return new Proxy({} as T, {
     get(_target, route: string) {
-      return async (...args: (string | number)[]) => {
+      return async (...args: JsonSerializable[]) => {
         try {
-          const response = await fetch('http://localhost:3001/api', {
+          const response = await fetch(url, {
             method: 'POST',
             body: JSON.stringify({ method: route, data: args }),
             headers: {

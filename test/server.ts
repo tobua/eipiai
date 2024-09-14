@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia'
+import type { Methods } from '../types'
 
 // biome-ignore lint/correctness/noUndeclaredVariables: Injected by runtime.
 const isLocal = typeof Bun !== 'undefined'
@@ -7,8 +8,7 @@ async function readBody(request: Request) {
   return isLocal ? request.body : await new Response(request.body).json()
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: Generic method, could be improved.
-export function startServer(methods: { [key: string]: (...args: any[]) => any }) {
+export function startServer(methods: Methods) {
   new Elysia()
     .onBeforeHandle(({ request }) => {
       console.log(`${request.method} request to ${request.url}`)
@@ -31,7 +31,7 @@ export function startServer(methods: { [key: string]: (...args: any[]) => any })
         }),
       },
     )
-    .listen(3001)
+    .listen(1000)
 
-  console.log('Server running on port 3001!')
+  console.log('Server running on http://localhost:1000!')
 }
