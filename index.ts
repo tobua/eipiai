@@ -6,7 +6,7 @@ export function api<T extends Methods>(
   return method
 }
 
-export function client<T extends ReturnType<typeof api>>(url = 'http://localhost:1000/api'): T {
+export function client<T extends ReturnType<typeof api>>(url = 'http://localhost:3000/api'): T {
   return new Proxy({} as T, {
     get(_target, route: string) {
       return async (...args: JsonSerializable[]) => {

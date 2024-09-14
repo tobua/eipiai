@@ -31,7 +31,7 @@ export function startServer(methods: Methods) {
         }),
       },
     )
-    .listen(1000)
+    .listen(3000)
 
-  console.log('Server running on http://localhost:1000!')
+  console.log('Server running on http://localhost:3000!')
 }
