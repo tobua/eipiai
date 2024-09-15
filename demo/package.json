@@ -1,0 +1,23 @@
+{
+  "name": "demo",
+  "scripts": {
+    "check": "biome check --write .",
+    "start": "rsbuild dev --open",
+    "types": "tsc"
+  },
+  "dependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@elysiajs/cors": "^1.1.1",
+    "@rsbuild/core": "^1.0.1-beta.14",
+    "@rsbuild/plugin-react": "^1.0.1-beta.14",
+    "elysia": "^1.1.12",
+    "epic-jsx": "^0.9.3",
+    "epic-state": "^0.12.0",
+    "typescript": "^5.5.4",
+    "zero-configuration": "^0.17.2"
+  },
+  "trustedDependencies": [
+    "zero-configuration"
+  ],
+  "type": "module"
+}
