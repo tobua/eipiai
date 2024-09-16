@@ -1,11 +1,11 @@
 import { expect, test } from 'bun:test'
-import { api, client } from '../index'
+import { api, client, route, z } from '../index'
 import { startServer } from './server'
 
 const specification = {
-  listPosts: () => [1, 2, 3],
-  getPost: (id: number) => [id],
-  updatePost: (value: number) => value,
+  listPosts: route()(() => [1, 2, 3]),
+  getPost: route(z.number())((id: number) => [id]),
+  updatePost: route(z.string())((value: string) => value),
 }
 
 startServer(specification)
@@ -19,4 +19,10 @@ test('Initializes client and returns data.', async () => {
   expect(await data.getPost(3)).toEqual({ error: false, data: [3] })
   // @ts-expect-error
   expect(await data.getPost(3, 'missing parameter')).toEqual({ error: false, data: [3] })
+  // @ts-expect-error
+  const updateResult = await data.updatePost(4)
+  expect(updateResult.error).toBe(true)
+  expect(updateResult.validation?.[0].expected).toBe('string')
+
+  expect(await data.updatePost('4')).toEqual({ error: false, data: '4' })
 })

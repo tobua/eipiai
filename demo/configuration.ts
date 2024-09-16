@@ -15,6 +15,7 @@ export const rsbuild = defineConfig({
   output: {
     // Only applied in production, GitHub pages in this case.
     assetPrefix: '/eipiai/',
+    minify: false,
   },
   tools: {
     rspack: {

@@ -19,7 +19,6 @@ const store = state({
 
 async function loadData() {
   const { error, data: posts } = await data.listPosts()
-  console.log('posts', posts)
 
   store.loading = false
   store.error = error

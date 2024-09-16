@@ -1,6 +1,5 @@
 export type JsonSerializable = string | number | boolean | null | { [key: string]: JsonSerializable } | JsonSerializable[]
 
-// biome-ignore lint/suspicious/noExplicitAny: Required for inference.
 export type Methods = { [key: string]: (...args: any[]) => any }
 
 // NOTE for checking types.

@@ -9,6 +9,9 @@
     "check": "biome check --write .",
     "types": "tsc && tsc --noEmit --project ./test/tsconfig.json"
   },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
   "devDependencies": {
     "@biomejs/biome": "^1.9.1",
     "@types/bun": "^1.1.9",
@@ -23,7 +26,8 @@
   "sideEffects": false,
   "main": "./index.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./elysia": "./elysia.ts"
   },
   "files": [
     "*.ts"
@@ -49,7 +53,8 @@
           },
           "suspicious": {
             "noConsoleLog": "off",
-            "noConsole": "off"
+            "noConsole": "off",
+            "noExplicitAny": "off"
           }
         }
       },
