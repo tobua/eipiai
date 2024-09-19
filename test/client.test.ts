@@ -5,7 +5,7 @@ import { startServer } from './server'
 const specification = {
   listPosts: route()(() => [1, 2, 3]),
   getPost: route(z.number())((id: number) => [id]),
-  updatePost: route(z.string())((value: string) => value),
+  updatePost: route(z.object({ content: z.string() }))(({ content }) => content),
 }
 
 startServer(specification)
@@ -20,9 +20,9 @@ test('Initializes client and returns data.', async () => {
   // @ts-expect-error
   expect(await data.getPost(3, 'missing parameter')).toEqual({ error: false, data: [3] })
   // @ts-expect-error
-  const updateResult = await data.updatePost(4)
+  const updateResult = await data.updatePost({ content: 4 })
   expect(updateResult.error).toBe(true)
   expect(updateResult.validation?.[0].expected).toBe('string')
-
-  expect(await data.updatePost('4')).toEqual({ error: false, data: '4' })
+  // @ts-ignore TODO fix type inference for objects
+  expect(await data.updatePost({ content: '4' })).toEqual({ error: false, data: '4' })
 })

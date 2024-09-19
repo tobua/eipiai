@@ -1,13 +1,13 @@
 import { type SafeParseReturnType, type ZodTypeAny, z as zod } from 'zod'
 import type { JsonSerializable, Methods } from './types'
 
-export function api<T extends Methods>(
-  method: T,
-): {
+type MappedMethods<T extends Methods> = {
   [K in keyof T]: (
     ...args: Parameters<T[K]>
   ) => Promise<{ error: boolean; data: ReturnType<T[K]>; validation?: SafeParseReturnType<any, any> }>
-} {
+}
+
+export function api<T extends Methods>(method: T): MappedMethods<T> {
   return method
 }
 
