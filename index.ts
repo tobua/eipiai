@@ -4,7 +4,7 @@ import type { JsonSerializable, Methods } from './types'
 type MappedMethods<T extends Methods> = {
   [K in keyof T]: (
     ...args: Parameters<T[K]>
-  ) => Promise<{ error: boolean; data: ReturnType<T[K]>; validation?: SafeParseReturnType<any, any> }>
+  ) => Promise<{ error: boolean; data: Awaited<ReturnType<T[K]>>; validation?: SafeParseReturnType<any, any> }>
 }
 
 export function api<T extends Methods>(method: T): MappedMethods<T> {

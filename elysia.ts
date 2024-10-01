@@ -29,7 +29,17 @@ export function handler(methods: Methods) {
         }
       }
 
-      return Response.json({ error: false, data: handler(...body.data) })
+      let data = handler(...body.data)
+
+      if (data instanceof Promise) {
+        try {
+          data = await data
+        } catch (_error) {
+          return Response.json({ error: true })
+        }
+      }
+
+      return Response.json({ error: false, data })
     },
     {
       body: t.Object({
