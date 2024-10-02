@@ -8,3 +8,5 @@ export type Methods = { [key: string]: (...args: any[]) => any }
 //   weird: (id: number) => [1, 2],
 //   random: (first: string, second: boolean) => 'What',
 // }
+
+export type Body = { method: string; data: string | number[]; context: JsonSerializable }
