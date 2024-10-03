@@ -1,26 +1,23 @@
 import { cors } from '@elysiajs/cors'
 import { Elysia } from 'elysia'
-import { handler } from '../elysia'
+import { eipiai } from '../elysia'
 import { api, route, z } from '../index'
 
-const methods = {
+export const routes = api({
   listPosts: route()(() => [
     { id: 0, text: 'Hello World' },
     { id: 1, text: 'This is the post content!' },
     { id: 2, text: "What's up you guys?!" },
   ]),
-  getPost: route(z.number())((id: number) => [id]),
-  updatePost: route(z.string())((value: string) => value),
-}
-
-export const specification = api(methods)
+  getPost: route(z.number())((_, id) => [id]),
+  updatePost: route(z.string())((_, value) => value),
+})
 
 new Elysia()
-  .onBeforeHandle(({ request }) => {
-    console.log(`${request.method} request to ${request.url}`)
-  })
   .use(cors())
-  .post('/api', handler(methods)[0], handler(methods)[1])
+  .use(eipiai(routes, { path: 'demo' }))
   .listen(3000)
 
-console.log('Server running on http://localhost:3000!')
+// biome-ignore lint/suspicious/noConsole: Server code.
+// biome-ignore lint/suspicious/noConsoleLog: Server code.
+console.log('Server running on http://localhost:3000/demo!')

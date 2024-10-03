@@ -15,6 +15,7 @@ export const rsbuild = defineConfig({
   output: {
     // Only applied in production, GitHub pages in this case.
     assetPrefix: '/eipiai/',
+    // To check if no server files landed in the bundle, disable for size comparison.
     minify: false,
   },
   tools: {

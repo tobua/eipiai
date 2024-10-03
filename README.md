@@ -5,7 +5,7 @@
 The simplest way to connect a client to a server while bypassing any HTTP features designed for server-side rendering.
 
 - 🎓 End-to-end server/client type safety with TypeScript
-- 🪶 Tiny client footprint
+- 🪶 Tiny client footprint `0.2 kB` for `v0.3.1`
 - 💯 Server adapters for Elysia
 - 🌳 Custom variables automatically shared among routes
 
