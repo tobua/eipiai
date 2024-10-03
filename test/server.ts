@@ -1,15 +1,14 @@
 import { Elysia } from 'elysia'
-import { handler } from '../elysia'
+import { eipiai } from '../elysia'
 import type { Methods } from '../types'
 
-export function startServer(methods: Methods) {
+export function startServer(methods: Methods, port = 3000, path = 'api') {
   new Elysia()
     .onBeforeHandle(({ request }) => {
       console.log(`${request.method} request to ${request.url}`)
     })
-    // @ts-ignore TODO inference issue
-    .post('/api', handler(methods)[0], handler(methods)[1])
-    .listen(3000)
+    .use(eipiai(methods, { path }))
+    .listen(port)
 
-  console.log('Server running on http://localhost:3000!')
+  console.log(`Server running on ${new URL(path, `http://localhost:${port}`).toString()}!`)
 }

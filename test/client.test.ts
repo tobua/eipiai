@@ -2,29 +2,27 @@ import { expect, test } from 'bun:test'
 import { api, client, route, z } from '../index'
 import { startServer } from './server'
 
-const routes = {
+const routes = api({
   listPosts: route()(() => [1, 2, 3]),
   asyncPosts: route()(async () => {
     await new Promise((done) => setTimeout(done, 200))
     return [4, 5]
   }),
-  getPost: route(z.number())((_skip, id: number) => [id]),
-  updatePost: route(z.object({ content: z.string() }))((_skip, { content }) => content),
-  multipleArguments: route(z.number(), z.number())((_skip, first: number, second: number) => first + second),
+  getPost: route(z.number())((_, id) => [id]),
+  updatePost: route(z.object({ content: z.string() }))((_, { content }) => content),
+  multipleArguments: route(z.number(), z.number())((_, first, second) => first + second),
   sharedVariable: route()(({ context: { uid } }) => {
     return uid
   }),
   routeError: route(z.object({ id: z.number() }))(({ context: { uid }, error }, { id }) => {
     error(`Custom error ${id} with ${uid}.`)
   }),
-}
+})
 
 startServer(routes) // Elysia
 
-const server = api(routes)
-
 test('Initializes client and returns data.', async () => {
-  const data = client<typeof server>()
+  const data = client<typeof routes>()
 
   expect(typeof data.getPost).toBe('function')
   expect(await data.getPost(3)).toEqual({ error: false, data: [3] })
@@ -47,14 +45,14 @@ test('Initializes client and returns data.', async () => {
 })
 
 test('Simple shared variables can be configured.', async () => {
-  const data = client<typeof server>({ context: { uid: '123' } })
+  const data = client<typeof routes>({ context: { uid: '123' } })
 
   expect(await data.sharedVariable()).toEqual({ error: false, data: '123' })
 })
 
 test('Custom shared variables can be configured.', async () => {
   let state = 1
-  const data = client<typeof server>({
+  const data = client<typeof routes>({
     context: () => ({
       uid: state,
     }),
@@ -65,4 +63,22 @@ test('Custom shared variables can be configured.', async () => {
   expect(await data.sharedVariable()).toEqual({ error: false, data: 2 })
 })
 
-// TODO test url configuration.
+test('Route error handler can return custom message.', async () => {
+  const data = client<typeof routes>({ context: { uid: '789' } })
+
+  expect(await data.routeError({ id: 1 })).toEqual({ error: 'Custom error 1 with 789.', data: undefined })
+  expect(await data.routeError({ id: 2 })).toEqual({ error: 'Custom error 2 with 789.', data: undefined })
+})
+
+test('URL can be customized.', async () => {
+  const routes = {
+    reallyCustom: route()(() => 'custom'),
+  }
+
+  startServer(routes, 1234, 'custom/route')
+  const simpleServer = api(routes)
+
+  const data = client<typeof simpleServer>({ url: 'http://localhost:1234/custom/route' })
+
+  expect(await data.reallyCustom()).toEqual({ error: false, data: 'custom' })
+})
