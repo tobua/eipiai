@@ -16,8 +16,8 @@ export const routes = api({
 new Elysia()
   .use(cors())
   .use(eipiai(routes, { path: 'demo' }))
-  .listen(3000)
+  .listen(3001)
 
 // biome-ignore lint/suspicious/noConsole: Server code.
 // biome-ignore lint/suspicious/noConsoleLog: Server code.
-console.log('Server running on http://localhost:3000/demo!')
+console.log('Server running on http://localhost:3001/demo!')

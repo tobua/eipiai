@@ -1,44 +1,8 @@
 import type Elysia from 'elysia'
 import { t } from 'elysia'
 import type { z } from 'zod'
-import type { Body, Handler, JsonSerializable, Methods } from './types'
-
-// biome-ignore lint/correctness/noUndeclaredVariables: Injected by runtime.
-const isLocal = typeof Bun !== 'undefined'
-
-async function readBody(request: Request) {
-  return isLocal ? request.body : await new Response(request.body).json()
-}
-
-function validateInputs(data: JsonSerializable, inputs?: z.ZodTypeAny) {
-  if (!inputs) {
-    return
-  }
-  const validationResult = inputs.safeParse(data)
-  if (!validationResult.success) {
-    return validationResult.error.errors
-  }
-}
-
-async function executeHandler(handler: Handler, body: Body, setError: (message: string) => void) {
-  let data = handler(
-    {
-      context: body.context ?? {},
-      error: setError,
-    },
-    ...body.data,
-  )
-
-  if (data instanceof Promise) {
-    try {
-      data = await data
-    } catch (_error) {
-      return { error: true }
-    }
-  }
-
-  return data
-}
+import { executeHandler, readBody, validateInputs } from './server'
+import type { Body, Handler, Methods } from './types'
 
 export function eipiai(routes: Methods, options?: { path?: string }) {
   if (typeof routes !== 'object') {
@@ -56,9 +20,14 @@ export function eipiai(routes: Methods, options?: { path?: string }) {
         }
 
         const [handler, inputs] = routes[body.method] as unknown as [Handler, z.ZodTypeAny]
-        const validationResult = validateInputs(body.data, inputs)
-        if (validationResult) {
-          return Response.json({ error: true, validation: validationResult })
+
+        if (inputs && body.data) {
+          const validationResult = validateInputs(body.data, inputs)
+          if (validationResult) {
+            return Response.json({ error: true, validation: validationResult })
+          }
+        } else {
+          body.data = undefined
         }
 
         let error: string | boolean = false

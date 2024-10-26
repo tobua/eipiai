@@ -7,7 +7,7 @@ import type { routes } from './server'
 
 plugin(connect)
 
-const data = client<typeof routes>({ url: 'http://localhost:3000/demo' })
+const data = client<typeof routes>({ url: 'http://localhost:3001/demo' })
 
 const store = state({
   loading: true,

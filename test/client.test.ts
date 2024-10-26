@@ -17,6 +17,8 @@ const routes = api({
   routeError: route(z.object({ id: z.number() }))(({ context: { uid }, error }, { id }) => {
     error(`Custom error ${id} with ${uid}.`)
   }),
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: For testing purposes.
+  emptyReturn: route()(() => {}),
 })
 
 startServer(routes) // Elysia
@@ -46,8 +48,12 @@ test('Initializes client and returns data.', async () => {
 
 test('Simple shared variables can be configured.', async () => {
   const data = client<typeof routes>({ context: { uid: '123' } })
-
   expect(await data.sharedVariable()).toEqual({ error: false, data: '123' })
+})
+
+test('Empty return will be shown as success.', async () => {
+  const data = client<typeof routes>()
+  expect(await data.emptyReturn()).toEqual({ error: false, data: undefined })
 })
 
 test('Custom shared variables can be configured.', async () => {
