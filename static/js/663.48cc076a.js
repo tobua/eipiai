@@ -67,6 +67,12 @@ function debounce(function_, wait = 100, options = {}) {
 		return result;
 	};
 
+	Object.defineProperty(debounced, 'isPending', {
+		get() {
+			return timeoutId !== undefined;
+		},
+	});
+
 	debounced.clear = () => {
 		if (!timeoutId) {
 			return;
@@ -319,12 +325,12 @@ const svgTagNames = [
 ]
 
 ;// CONCATENATED MODULE: ./node_modules/epic-jsx/types.ts
-var types_Change;
-(function(Change) {
+var types_Change = /*#__PURE__*/ function(Change) {
     Change[Change["Update"] = 0] = "Update";
     Change[Change["Add"] = 1] = "Add";
     Change[Change["Delete"] = 2] = "Delete";
-})(types_Change || (types_Change = {}));
+    return Change;
+}({});
 
 ;// CONCATENATED MODULE: ./node_modules/epic-jsx/browser.ts
 
@@ -737,7 +743,7 @@ const Renderer = {
 };
 
 // biome-ignore lint/style/noDefaultExport: React compatibility.
-/* harmony default export */ const epic_jsx = ((/* unused pure expression or super */ null && (React)));
+/* ESM default export */ const epic_jsx = ((/* unused pure expression or super */ null && (React)));
 const roots = new Map();
 // Imported by regular React runtime, implementation is guess.
 const Fragment = (/* unused pure expression or super */ null && (undefined)) // Symbol.for('react.fragment')
@@ -898,7 +904,7 @@ __webpack_require__.d(__webpack_exports__, {
   n4: function() { return isSetter; },
   u0: function() { return canPolyfill; }
 });
-/* harmony import */var logua__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(224);
+/* ESM import */var logua__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(224);
 
 const log = (0,logua__WEBPACK_IMPORTED_MODULE_0__/* .create */.U)('epic-state', 'red');
 const isObject = (x)=>typeof x === 'object' && x !== null;
@@ -1217,12 +1223,12 @@ function objectSet(state, initialValues, parent, root) {
 ;// CONCATENATED MODULE: ./node_modules/epic-state/derive.ts
 
 const cache = new Map();
-var derive_DependenciesState;
-(function(DependenciesState) {
+var derive_DependenciesState = /*#__PURE__*/ (/* unused pure expression or super */ null && (function(DependenciesState) {
     DependenciesState[DependenciesState["New"] = 0] = "New";
     DependenciesState[DependenciesState["Clean"] = 1] = "Clean";
     DependenciesState[DependenciesState["Dirty"] = 2] = "Dirty";
-})(derive_DependenciesState || (derive_DependenciesState = {}));
+    return DependenciesState;
+}(derive_DependenciesState || {})));
 // TODO use tuple map from plugins.
 // References properties on properties that were accessed during the tracking state
 // and therefore need to be updated.
@@ -1503,7 +1509,7 @@ __webpack_require__.d(__webpack_exports__, {
   bP: function() { return initializePlugins; },
   xv: function() { return callPlugins; }
 });
-/* harmony import */var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(266);
+/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(266);
 
 const globalPlugins = [];
 function initializePlugins(state, plugin) {
@@ -1570,9 +1576,9 @@ function removeAllPlugins() {
 __webpack_require__.d(__webpack_exports__, {
   $: function() { return connect; }
 });
-/* harmony import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(545);
-/* harmony import */var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(164);
-/* harmony import */var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(266);
+/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(545);
+/* ESM import */var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(164);
+/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(266);
 
 
 
@@ -1663,12 +1669,12 @@ function _define_property(obj, key, value) {
 
 ;// CONCATENATED MODULE: ./node_modules/epic-state/types.ts
 
-var types_PluginAction;
-(function(PluginAction) {
+var types_PluginAction = /*#__PURE__*/ function(PluginAction) {
     PluginAction["Get"] = "get";
     PluginAction["Set"] = "set";
     PluginAction["Delete"] = "delete";
-})(types_PluginAction || (types_PluginAction = {}));
+    return PluginAction;
+}({});
 class TupleArrayMap {
     has(firstKey, secondKey) {
         var _this_observedProperties_get;
@@ -1712,7 +1718,7 @@ class TupleArrayMap {
 __webpack_require__.d(__webpack_exports__, {
   U: function() { return create; }
 });
-/* harmony import */var debounce__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(296);
+/* ESM import */var debounce__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(296);
 // index.ts
 
 

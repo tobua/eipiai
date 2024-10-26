@@ -70,7 +70,7 @@ function index_route() {
 
 (0,epic_state_plugin/* plugin */.BA)(plugin_epic_jsx/* connect */.$);
 const data = client({
-    url: 'http://localhost:3000/demo'
+    url: 'http://localhost:3001/demo'
 });
 const store = (0,epic_state/* state */.SB)({
     loading: true,
@@ -242,7 +242,7 @@ __webpack_require__.O = function (result, chunkIds, fn, priority) {
 // webpack/runtime/rspack_version
 (() => {
 __webpack_require__.rv = function () {
-	return "1.0.8";
+	return "1.0.14";
 };
 
 })();
@@ -298,7 +298,7 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.0.8";
+__webpack_require__.ruid = "bundler=rspack@1.0.14";
 
 })();
 /************************************************************************/
