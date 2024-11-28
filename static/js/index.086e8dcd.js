@@ -47,6 +47,66 @@ function client(options) {
         }
     });
 }
+function socketClient(options) {
+    return new Promise((done)=>{
+        const handler = new Proxy({}, {
+            get (_target, route) {
+                return async function() {
+                    for(var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++){
+                        args[_key] = arguments[_key];
+                    }
+                    socket.send(JSON.stringify([
+                        route,
+                        args
+                    ]));
+                    return new Promise((innerDone)=>{
+                        state.message = innerDone;
+                    });
+                // const response = await fetch(options?.url ?? 'http://localhost:3000/api', {
+                //   method: 'POST',
+                //   body: JSON.stringify({
+                //     method: route,
+                //     data: args,
+                //     context: typeof options?.context === 'function' ? options.context() : (options?.context ?? {}),
+                //   } as Body),
+                //   headers: {
+                //     'Content-Type': 'application/json',
+                //   },
+                // })
+                // return await response.json()
+                // return { error: false, data: route }
+                // } catch (_error) {
+                //   return { error: true }
+                // }
+                };
+            }
+        });
+        const socket = new WebSocket((options === null || options === void 0 ? void 0 : options.url) ?? 'ws://localhost:3000/api');
+        const state = {
+            message: (data)=>{
+                console.log('Missing handler, message ignored!', typeof data);
+            }
+        };
+        socket.onopen = ()=>{
+            done({
+                client: handler,
+                close: ()=>socket.close()
+            });
+        };
+        socket.onmessage = (event)=>{
+            console.log('Message from server:', event.data);
+            state.message({
+                error: false,
+                data: JSON.parse(event.data)
+            });
+        };
+        socket.onerror = ()=>{
+            state.message({
+                error: true
+            });
+        };
+    });
+}
 const z = (/* unused pure expression or super */ null && (zod));
 function index_route() {
     for(var _len = arguments.length, inputs = new Array(_len), _key = 0; _key < _len; _key++){
@@ -69,7 +129,7 @@ function index_route() {
 
 
 (0,epic_state_plugin/* plugin */.BA)(plugin_epic_jsx/* connect */.$);
-const data = client({
+const index_data = client({
     url: 'http://localhost:3001/demo'
 });
 const store = (0,epic_state/* state */.SB)({
@@ -78,7 +138,7 @@ const store = (0,epic_state/* state */.SB)({
     posts: []
 });
 async function loadData() {
-    const { error, data: posts } = await data.listPosts();
+    const { error, data: posts } = await index_data.listPosts();
     store.loading = false;
     store.error = !!error;
     store.posts = posts;
@@ -242,7 +302,7 @@ __webpack_require__.O = function (result, chunkIds, fn, priority) {
 // webpack/runtime/rspack_version
 (() => {
 __webpack_require__.rv = function () {
-	return "1.0.14";
+	return "1.1.4";
 };
 
 })();
@@ -298,7 +358,7 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.0.14";
+__webpack_require__.ruid = "bundler=rspack@1.1.4";
 
 })();
 /************************************************************************/
