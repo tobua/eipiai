@@ -48,29 +48,17 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
     const handler = new Proxy({} as T, {
       get(_target, route: string) {
         return async (...args: JsonSerializable[]) => {
-          socket.send(JSON.stringify([route, args]))
+          socket.send(
+            JSON.stringify({
+              method: route,
+              data: args,
+              context: typeof options?.context === 'function' ? options.context() : (options?.context ?? {}),
+            } as Body),
+          )
 
           return new Promise((innerDone) => {
             state.message = innerDone
           })
-
-          // const response = await fetch(options?.url ?? 'http://localhost:3000/api', {
-          //   method: 'POST',
-          //   body: JSON.stringify({
-          //     method: route,
-          //     data: args,
-          //     context: typeof options?.context === 'function' ? options.context() : (options?.context ?? {}),
-          //   } as Body),
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //   },
-          // })
-
-          // return await response.json()
-          // return { error: false, data: route }
-          // } catch (_error) {
-          //   return { error: true }
-          // }
         }
       },
     })
@@ -82,17 +70,25 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
       },
     }
 
+    function resetMessage() {
+      state.message = (data: any) => {
+        console.log('Missing handler, message ignored!', typeof data)
+      }
+    }
+
     socket.onopen = () => {
+      resetMessage()
       done({ client: handler, close: () => socket.close() })
     }
 
     socket.onmessage = (event: { data: string }) => {
-      console.log('Message from server:', event.data)
-      state.message({ error: false, data: JSON.parse(event.data) })
+      state.message(JSON.parse(event.data))
+      resetMessage()
     }
 
     socket.onerror = () => {
       state.message({ error: true })
+      resetMessage()
     }
   })
 }
