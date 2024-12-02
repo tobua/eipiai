@@ -2,10 +2,15 @@ import { type SafeParseReturnType, type ZodTypeAny, z as zod } from 'zod'
 import type { Body, JsonSerializable, Methods } from './types'
 
 type MappedMethods<T extends Methods> = {
-  [K in keyof T]: (
-    ...args: Parameters<T[K]>
-  ) => Promise<{ error: boolean | string; data: Awaited<ReturnType<T[K]>>; validation?: SafeParseReturnType<any, any> }>
+  [K in keyof T]: (...args: Parameters<T[K]>) => Promise<{
+    error: boolean | string
+    data: Awaited<ReturnType<T[K]>>
+    validation?: SafeParseReturnType<any, any>
+    subscribe?: (callback: (data: any) => void) => void
+  }>
 }
+
+const subscribers: Record<string, ((data: any) => void)[]> = {}
 
 export function api<T extends Methods>(method: T): MappedMethods<T> {
   return method
@@ -64,16 +69,12 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
     })
 
     const socket = new WebSocket(options?.url ?? 'ws://localhost:3000/api')
-    const state = {
-      message: (data: any) => {
-        console.log('Missing handler, message ignored!', typeof data)
-      },
+    const state: { message: false | ((value: any) => void) } = {
+      message: false,
     }
 
     function resetMessage() {
-      state.message = (data: any) => {
-        console.log('Missing handler, message ignored!', typeof data)
-      }
+      state.message = false
     }
 
     socket.onopen = () => {
@@ -81,13 +82,32 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
       done({ client: handler, close: () => socket.close() })
     }
 
-    socket.onmessage = (event: { data: string }) => {
-      state.message(JSON.parse(event.data))
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      if (data.subscribe) {
+        data.subscribe = (handler: (data: any) => void) => {
+          if (!subscribers[data.route]) {
+            subscribers[data.route] = []
+          }
+          subscribers[data.route]?.push(handler)
+        }
+      } else {
+        data.subscribe = undefined
+      }
+      if (state.message) {
+        state.message({ ...data, route: undefined })
+      } else if (subscribers[data.route]) {
+        for (const subscriber of subscribers[data.route] ?? []) {
+          subscriber(data)
+        }
+      }
       resetMessage()
     }
 
     socket.onerror = () => {
-      state.message({ error: true })
+      if (state.message) {
+        state.message({ error: true })
+      }
       resetMessage()
     }
   })
@@ -104,5 +124,17 @@ export function route<T extends ZodTypeAny[]>(...inputs: T) {
   ) => {
     // @ts-ignore zod.tuple working, but types fail...
     return [handler, zod.tuple(inputs)] as unknown as (...args: { [K in keyof T]: zod.infer<T[K]> }) => ReturnType<typeof handler>
+  }
+}
+
+export function socket<T extends ZodTypeAny[]>(...inputs: T) {
+  return (
+    handler: (
+      options: { context: Record<string, any>; error: (message: string) => void; update: (data: any) => void },
+      ...args: { [K in keyof T]: zod.infer<T[K]> }
+    ) => any,
+  ) => {
+    // @ts-ignore zod.tuple working, but types fail...
+    return [handler, zod.tuple(inputs), true] as unknown as (...args: { [K in keyof T]: zod.infer<T[K]> }) => ReturnType<typeof handler>
   }
 }
