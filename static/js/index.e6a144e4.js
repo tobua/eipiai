@@ -15,6 +15,7 @@ var epic_state = __webpack_require__("220");
 var plugin_epic_jsx = __webpack_require__("841");
 ;// CONCATENATED MODULE: ../index.ts
 
+const subscribers = (/* unused pure expression or super */ null && ({}));
 function api(method) {
     return method;
 }
@@ -55,55 +56,63 @@ function socketClient(options) {
                     for(var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++){
                         args[_key] = arguments[_key];
                     }
-                    socket.send(JSON.stringify([
-                        route,
-                        args
-                    ]));
+                    socket.send(JSON.stringify({
+                        method: route,
+                        data: args,
+                        context: typeof (options === null || options === void 0 ? void 0 : options.context) === 'function' ? options.context() : (options === null || options === void 0 ? void 0 : options.context) ?? {}
+                    }));
                     return new Promise((innerDone)=>{
                         state.message = innerDone;
                     });
-                // const response = await fetch(options?.url ?? 'http://localhost:3000/api', {
-                //   method: 'POST',
-                //   body: JSON.stringify({
-                //     method: route,
-                //     data: args,
-                //     context: typeof options?.context === 'function' ? options.context() : (options?.context ?? {}),
-                //   } as Body),
-                //   headers: {
-                //     'Content-Type': 'application/json',
-                //   },
-                // })
-                // return await response.json()
-                // return { error: false, data: route }
-                // } catch (_error) {
-                //   return { error: true }
-                // }
                 };
             }
         });
         const socket = new WebSocket((options === null || options === void 0 ? void 0 : options.url) ?? 'ws://localhost:3000/api');
         const state = {
-            message: (data)=>{
-                console.log('Missing handler, message ignored!', typeof data);
-            }
+            message: false
         };
+        function resetMessage() {
+            state.message = false;
+        }
         socket.onopen = ()=>{
+            resetMessage();
             done({
                 client: handler,
                 close: ()=>socket.close()
             });
         };
         socket.onmessage = (event)=>{
-            console.log('Message from server:', event.data);
-            state.message({
-                error: false,
-                data: JSON.parse(event.data)
-            });
+            const data = JSON.parse(event.data);
+            if (data.subscribe) {
+                data.subscribe = (handler)=>{
+                    var _subscribers_data_route;
+                    if (!subscribers[data.route]) {
+                        subscribers[data.route] = [];
+                    }
+                    (_subscribers_data_route = subscribers[data.route]) === null || _subscribers_data_route === void 0 ? void 0 : _subscribers_data_route.push(handler);
+                };
+            } else {
+                data.subscribe = undefined;
+            }
+            if (state.message) {
+                state.message({
+                    ...data,
+                    route: undefined
+                });
+            } else if (subscribers[data.route]) {
+                for (const subscriber of subscribers[data.route] ?? []){
+                    subscriber(data);
+                }
+            }
+            resetMessage();
         };
         socket.onerror = ()=>{
-            state.message({
-                error: true
-            });
+            if (state.message) {
+                state.message({
+                    error: true
+                });
+            }
+            resetMessage();
         };
     });
 }
@@ -117,6 +126,19 @@ function index_route() {
         return [
             handler,
             zod.tuple(inputs)
+        ];
+    };
+}
+function index_socket() {
+    for(var _len = arguments.length, inputs = new Array(_len), _key = 0; _key < _len; _key++){
+        inputs[_key] = arguments[_key];
+    }
+    return (handler)=>{
+        // @ts-ignore zod.tuple working, but types fail...
+        return [
+            handler,
+            zod.tuple(inputs),
+            true
         ];
     };
 }
