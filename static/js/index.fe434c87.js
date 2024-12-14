@@ -16,8 +16,8 @@ var plugin_epic_jsx = __webpack_require__("841");
 ;// CONCATENATED MODULE: ../index.ts
 
 const subscribers = (/* unused pure expression or super */ null && ({}));
-function api(method) {
-    return method;
+function api(methods) {
+    return methods;
 }
 function client(options) {
     return new Proxy({}, {
@@ -61,6 +61,14 @@ function socketClient(options) {
                         data: args,
                         context: typeof (options === null || options === void 0 ? void 0 : options.context) === 'function' ? options.context() : (options === null || options === void 0 ? void 0 : options.context) ?? {}
                     }));
+                    const isSubscription = typeof args[0] === 'function';
+                    if (isSubscription) {
+                        var _subscribers_route;
+                        if (!subscribers[route]) {
+                            subscribers[route] = [];
+                        }
+                        (_subscribers_route = subscribers[route]) === null || _subscribers_route === void 0 ? void 0 : _subscribers_route.push(args[0]);
+                    }
                     return new Promise((innerDone)=>{
                         state.message = innerDone;
                     });
@@ -83,26 +91,29 @@ function socketClient(options) {
         };
         socket.onmessage = (event)=>{
             const data = JSON.parse(event.data);
+            if (data.subscribed === true) {
+                if (state.message) {
+                    state.message({
+                        error: false
+                    }) // Resolve promise to confirm subscription to client.
+                    ;
+                    resetMessage();
+                    return;
+                }
+            }
             if (data.subscribe) {
-                data.subscribe = (handler)=>{
-                    var _subscribers_data_route;
-                    if (!subscribers[data.route]) {
-                        subscribers[data.route] = [];
+                if (subscribers[data.route]) {
+                    for (const subscriber of subscribers[data.route] ?? []){
+                        subscriber(data);
                     }
-                    (_subscribers_data_route = subscribers[data.route]) === null || _subscribers_data_route === void 0 ? void 0 : _subscribers_data_route.push(handler);
-                };
-            } else {
-                data.subscribe = undefined;
+                }
+                return;
             }
             if (state.message) {
                 state.message({
                     ...data,
                     route: undefined
                 });
-            } else if (subscribers[data.route]) {
-                for (const subscriber of subscribers[data.route] ?? []){
-                    subscriber(data);
-                }
             }
             resetMessage();
         };
@@ -129,18 +140,14 @@ function index_route() {
         ];
     };
 }
-function index_socket() {
+function subscribe() {
     for(var _len = arguments.length, inputs = new Array(_len), _key = 0; _key < _len; _key++){
         inputs[_key] = arguments[_key];
     }
-    return (handler)=>{
+    return [
         // @ts-ignore zod.tuple working, but types fail...
-        return [
-            handler,
-            zod.tuple(inputs),
-            true
-        ];
-    };
+        Array.isArray(inputs) ? zod.tuple(inputs) : inputs
+    ];
 }
 
 ;// CONCATENATED MODULE: ./index.tsx
@@ -324,7 +331,7 @@ __webpack_require__.O = function (result, chunkIds, fn, priority) {
 // webpack/runtime/rspack_version
 (() => {
 __webpack_require__.rv = function () {
-	return "1.1.4";
+	return "1.1.6";
 };
 
 })();
@@ -380,7 +387,7 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.1.4";
+__webpack_require__.ruid = "bundler=rspack@1.1.6";
 
 })();
 /************************************************************************/
