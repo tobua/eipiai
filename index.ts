@@ -1,19 +1,21 @@
 import { type SafeParseReturnType, type ZodTypeAny, z as zod } from 'zod'
-import type { Body, JsonSerializable, Methods } from './types'
+import type { Body, Handler, JsonSerializable, Methods } from './types'
 
 type MappedMethods<T extends Methods> = {
-  [K in keyof T]: (...args: Parameters<T[K]>) => Promise<{
-    error: boolean | string
-    data: Awaited<ReturnType<T[K]>>
-    validation?: SafeParseReturnType<any, any>
-    subscribe?: (callback: (data: any) => void) => void
-  }>
+  [K in keyof T]: T[K] extends Handler
+    ? (...args: Parameters<T[K]>) => Promise<{
+        error: boolean | string
+        data: Awaited<ReturnType<T[K]>>
+        validation?: SafeParseReturnType<any, any>
+        subscribe?: (callback: (data: any) => void) => void
+      }>
+    : (callback: (data: any) => void) => Promise<void>
 }
 
 const subscribers: Record<string, ((data: any) => void)[]> = {}
 
-export function api<T extends Methods>(method: T): MappedMethods<T> {
-  return method
+export function api<T extends Methods>(methods: T): MappedMethods<T> {
+  return methods as unknown as MappedMethods<T>
 }
 
 export function client<T extends ReturnType<typeof api>>(options?: {
@@ -61,6 +63,15 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
             } as Body),
           )
 
+          const isSubscription = typeof args[0] === 'function'
+
+          if (isSubscription) {
+            if (!subscribers[route]) {
+              subscribers[route] = []
+            }
+            subscribers[route]?.push(args[0] as unknown as (data: any) => void)
+          }
+
           return new Promise((innerDone) => {
             state.message = innerDone
           })
@@ -84,22 +95,23 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      if (data.subscribe) {
-        data.subscribe = (handler: (data: any) => void) => {
-          if (!subscribers[data.route]) {
-            subscribers[data.route] = []
-          }
-          subscribers[data.route]?.push(handler)
+      if (data.subscribed === true) {
+        if (state.message) {
+          state.message({ error: false }) // Resolve promise to confirm subscription to client.
+          resetMessage()
+          return
         }
-      } else {
-        data.subscribe = undefined
+      }
+      if (data.subscribe) {
+        if (subscribers[data.route]) {
+          for (const subscriber of subscribers[data.route] ?? []) {
+            subscriber(data)
+          }
+        }
+        return
       }
       if (state.message) {
         state.message({ ...data, route: undefined })
-      } else if (subscribers[data.route]) {
-        for (const subscriber of subscribers[data.route] ?? []) {
-          subscriber(data)
-        }
       }
       resetMessage()
     }
@@ -118,7 +130,10 @@ export const z = zod
 export function route<T extends ZodTypeAny[]>(...inputs: T) {
   return (
     handler: (
-      options: { context: Record<string, any>; error: (message: string) => void },
+      options: {
+        context: Record<string, any>
+        error: (message: string) => void
+      },
       ...args: { [K in keyof T]: zod.infer<T[K]> }
     ) => any,
   ) => {
@@ -127,14 +142,9 @@ export function route<T extends ZodTypeAny[]>(...inputs: T) {
   }
 }
 
-export function socket<T extends ZodTypeAny[]>(...inputs: T) {
-  return (
-    handler: (
-      options: { context: Record<string, any>; error: (message: string) => void; update: (data: any) => void },
-      ...args: { [K in keyof T]: zod.infer<T[K]> }
-    ) => any,
-  ) => {
+export function subscribe<T extends ZodTypeAny[]>(...inputs: T) {
+  return [
     // @ts-ignore zod.tuple working, but types fail...
-    return [handler, zod.tuple(inputs), true] as unknown as (...args: { [K in keyof T]: zod.infer<T[K]> }) => ReturnType<typeof handler>
-  }
+    Array.isArray(inputs) ? zod.tuple(inputs) : inputs,
+  ] as unknown as undefined
 }

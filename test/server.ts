@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { eipiai } from '../elysia'
+import { socket } from '../socket'
 import type { Methods } from '../types'
-import { websocket } from '../websocket'
 
 export function startServer(methods: Methods, port = 3000, path = 'api') {
   new Elysia()
@@ -15,9 +15,10 @@ export function startServer(methods: Methods, port = 3000, path = 'api') {
 }
 
 export function startWebsocketServer(methods: Methods, port = 3000, path = 'api') {
-  new Elysia().use(websocket(methods, { path })).listen(port)
+  const { inject, subscriptions } = socket(methods, { path })
+  new Elysia().use(inject).listen(port)
 
   const url = new URL(path, `ws://localhost:${port}`).toString()
   console.log(`Websocket running on ${url}!`)
-  return url
+  return { url, subscriptions }
 }

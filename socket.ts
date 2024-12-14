@@ -5,13 +5,13 @@ import { executeHandler, validateInputs } from './server'
 import type { Body, Handler, Methods } from './types'
 
 async function runRoute(body: Body, routes: Methods, ws: any) {
-  const [handler, inputs, subscribe] = routes[body.method] as unknown as [Handler, z.ZodTypeAny, boolean]
+  const [handler, inputs] = routes[body.method] as unknown as [Handler, z.ZodTypeAny]
 
   if (inputs && body.data) {
     const validationResult = validateInputs(body.data, inputs)
 
     if (validationResult) {
-      return ws.send({ error: true, validation: validationResult, subscribe: !!subscribe, route: body.method })
+      return ws.send({ error: true, validation: validationResult, route: body.method })
     }
   } else {
     body.data = undefined
@@ -29,15 +29,30 @@ async function runRoute(body: Body, routes: Methods, ws: any) {
     },
   )
 
-  ws.send({ error, data, subscribe: !!subscribe, route: body.method })
+  ws.send({ error, data, route: body.method })
 }
 
-export function websocket(routes: Methods, options?: { path?: string }) {
+function registerSubscription(method: string, ws: any) {
+  return (data: any) => {
+    ws.send({ error: false, data, route: method, subscribe: true })
+  }
+}
+
+// Server will only send messages to subscriptions that have been previously registered by the client.
+const subscriptions: { [K in string]?: ReturnType<typeof registerSubscription> } = {}
+
+export function callSubscription(method: string, data: any) {
+  if (subscriptions[method]) {
+    subscriptions[method](data)
+  }
+}
+
+export function socket(routes: Methods, options?: { path?: string }) {
   if (typeof routes !== 'object') {
     console.error('"routes" passed to eipiai(routes) must be an object.')
   }
 
-  return (eri: Elysia) => {
+  const inject = (eri: Elysia) => {
     const app = eri.ws(options?.path ?? 'api', {
       body: t.Object({
         method: t.String(),
@@ -50,10 +65,18 @@ export function websocket(routes: Methods, options?: { path?: string }) {
         if (!message.method) {
           return ws.send({ error: true })
         }
-        runRoute(message, routes, ws)
+        const route = routes[message.method] as unknown as []
+        if (route.length > 1) {
+          runRoute(message, routes, ws)
+        } else {
+          subscriptions[message.method] = registerSubscription(message.method, ws)
+          return ws.send({ error: false, subscribed: true })
+        }
       },
     })
 
     return app
   }
+
+  return { inject, subscriptions }
 }

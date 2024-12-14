@@ -10,17 +10,17 @@
     "types": "tsc && tsc --noEmit --project ./test/tsconfig.json"
   },
   "dependencies": {
-    "zod": "^3.23.8"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/bun": "^1.1.14",
-    "elysia": "^1.1.25",
+    "elysia": "^1.1.26",
     "typescript": "^5.7.2",
     "zero-configuration": "^0.17.6"
   },
   "peerDependencies": {
-    "elysia": "^1.1.25"
+    "elysia": ">= 1"
   },
   "peerDependenciesMeta": {
     "elysia": {
@@ -36,7 +36,8 @@
   "exports": {
     ".": "./index.ts",
     "./elysia": "./elysia.ts",
-    "./vercel": "./vercel.ts"
+    "./vercel": "./vercel.ts",
+    "./socket": "./socket.ts"
   },
   "files": [
     "*.ts"
