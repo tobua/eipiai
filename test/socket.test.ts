@@ -7,6 +7,7 @@ const methods = {
   getPost: route(z.number())((_, id) => [id]),
   subscribePosts: subscribe(z.object({ text: z.string() })),
   subscribePost: subscribe(z.number()),
+  subscribeMultiplePost: subscribe(z.number(), z.string()),
 }
 
 const routes = api(methods)

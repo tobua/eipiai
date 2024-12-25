@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { api, client, route, z } from '../index'
 import { startServer } from './server'
 
-const routes = api({
+const methods = {
   listPosts: route()(() => [1, 2, 3]),
   asyncPosts: route()(async () => {
     await new Promise((done) => setTimeout(done, 200))
@@ -19,7 +19,9 @@ const routes = api({
   }),
   // biome-ignore lint/suspicious/noEmptyBlockStatements: For testing purposes.
   emptyReturn: route()(() => {}),
-})
+}
+
+const routes = api(methods)
 
 startServer(routes) // Elysia
 

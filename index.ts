@@ -9,7 +9,7 @@ type MappedMethods<T extends Methods> = {
         validation?: SafeParseReturnType<any, any>
         subscribe?: (callback: (data: any) => void) => void
       }>
-    : (callback: (data: any) => void) => Promise<void>
+    : (callback: (data: T) => void) => Promise<void>
 }
 
 const subscribers: Record<string, ((data: any) => void)[]> = {}
@@ -102,11 +102,9 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
           return
         }
       }
-      if (data.subscribe) {
-        if (subscribers[data.route]) {
-          for (const subscriber of subscribers[data.route] ?? []) {
-            subscriber(data)
-          }
+      if (data.subscribe && subscribers[data.route]) {
+        for (const subscriber of subscribers[data.route] ?? []) {
+          subscriber(data)
         }
         return
       }
@@ -146,5 +144,5 @@ export function subscribe<T extends ZodTypeAny[]>(...inputs: T) {
   return [
     // @ts-ignore zod.tuple working, but types fail...
     Array.isArray(inputs) ? zod.tuple(inputs) : inputs,
-  ] as unknown as undefined
+  ] as unknown as T
 }
