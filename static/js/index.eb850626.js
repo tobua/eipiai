@@ -101,11 +101,9 @@ function socketClient(options) {
                     return;
                 }
             }
-            if (data.subscribe) {
-                if (subscribers[data.route]) {
-                    for (const subscriber of subscribers[data.route] ?? []){
-                        subscriber(data);
-                    }
+            if (data.subscribe && subscribers[data.route]) {
+                for (const subscriber of subscribers[data.route] ?? []){
+                    subscriber(data);
                 }
                 return;
             }
@@ -331,7 +329,7 @@ __webpack_require__.O = function (result, chunkIds, fn, priority) {
 // webpack/runtime/rspack_version
 (() => {
 __webpack_require__.rv = function () {
-	return "1.1.6";
+	return "1.1.8";
 };
 
 })();
@@ -387,7 +385,7 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.1.6";
+__webpack_require__.ruid = "bundler=rspack@1.1.8";
 
 })();
 /************************************************************************/
