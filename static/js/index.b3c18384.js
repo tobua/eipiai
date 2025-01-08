@@ -91,22 +91,43 @@ function socketClient(options) {
         };
         socket.onmessage = (event)=>{
             const data = JSON.parse(event.data);
-            if (data.subscribed === true) {
-                if (state.message) {
-                    state.message({
-                        error: false
-                    }) // Resolve promise to confirm subscription to client.
-                    ;
-                    resetMessage();
-                    return;
-                }
-            }
-            if (data.subscribe && subscribers[data.route]) {
-                for (const subscriber of subscribers[data.route] ?? []){
-                    subscriber(data);
-                }
+            const { subscribed, subscribe, route, error, data: responseData } = data;
+            if (handleSubscriptionConfirmation(subscribed)) {
                 return;
             }
+            if (handleSubscriptionNotification(subscribe, route, error, responseData)) {
+                return;
+            }
+            handleMessageResponse(data);
+        };
+        function handleSubscriptionConfirmation(subscribed) {
+            if (subscribed && state.message) {
+                state.message({
+                    error: false
+                });
+                resetMessage();
+                return true;
+            }
+            return false;
+        }
+        function handleSubscriptionNotification(subscribe, route, error, responseData) {
+            if (error) {
+                console.log(`Erroneous subscription response received for ${route}.`);
+            }
+            if (subscribe && subscribers[route]) {
+                notifySubscribers(route, responseData);
+                return true;
+            }
+            return false;
+        }
+        function notifySubscribers(route, responseData) {
+            for (const subscriber of subscribers[route] ?? []){
+                subscriber(...responseData.length > 1 ? responseData : [
+                    responseData[0]
+                ]);
+            }
+        }
+        function handleMessageResponse(data) {
             if (state.message) {
                 state.message({
                     ...data,
@@ -114,7 +135,7 @@ function socketClient(options) {
                 });
             }
             resetMessage();
-        };
+        }
         socket.onerror = ()=>{
             if (state.message) {
                 state.message({
@@ -138,7 +159,7 @@ function index_route() {
         ];
     };
 }
-function subscribe() {
+function index_subscribe() {
     for(var _len = arguments.length, inputs = new Array(_len), _key = 0; _key < _len; _key++){
         inputs[_key] = arguments[_key];
     }
