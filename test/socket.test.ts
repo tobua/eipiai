@@ -28,7 +28,7 @@ test('Initializes client and subscribes to various routes.', async () => {
 
   expect(subscriptions).toEqual({})
 
-  const subscribePostsMock = mock<(data: any) => void>()
+  const subscribePostsMock = mock<(data: { text: string }) => void>()
   await client.subscribePosts(subscribePostsMock)
 
   expect(subscriptions.subscribePosts).toBeDefined()
@@ -41,7 +41,7 @@ test('Initializes client and subscribes to various routes.', async () => {
   }
 
   expect(subscribePostsMock).toHaveBeenCalled()
-  expect(subscribePostsMock.mock.calls[0][0].data).toEqual(data)
+  expect(subscribePostsMock.mock.calls[0][0]).toEqual(data)
 
   const subscribePostMock = mock<(data: number) => void>()
   client.subscribePost(subscribePostMock) // Skipping await
@@ -55,14 +55,26 @@ test('Initializes client and subscribes to various routes.', async () => {
     await wait()
   }
 
-  expect(subscribePostMock.mock.calls[0][0].data).toBe(5)
+  expect(subscribePostMock.mock.calls[0][0]).toBe(5)
 
   if (subscriptions.subscribePost) {
     subscriptions.subscribePost(10)
     await wait()
   }
 
-  expect(subscribePostMock.mock.calls[1][0].data).toBe(10)
+  expect(subscribePostMock.mock.calls[1][0]).toBe(10)
+
+  const subscribeMultiplePostMock = mock<(first: number, second: string) => void>()
+  await client.subscribeMultiplePost(subscribeMultiplePostMock)
+
+  await wait()
+
+  if (subscriptions.subscribeMultiplePost) {
+    subscriptions.subscribeMultiplePost(1, '1')
+    await wait()
+  }
+
+  expect(subscribeMultiplePostMock.mock.calls[0]).toEqual([1, '1'])
 
   close()
 })

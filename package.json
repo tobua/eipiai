@@ -14,9 +14,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@types/bun": "^1.1.14",
-    "elysia": "^1.2.6",
-    "typescript": "^5.7.2",
+    "@types/bun": "^1.1.15",
+    "elysia": "^1.2.10",
+    "typescript": "^5.7.3",
     "zero-configuration": "^0.17.6"
   },
   "peerDependencies": {
@@ -85,7 +85,10 @@
         "folder": "test",
         "compilerOptions": {
           "strict": false
-        }
+        },
+        "include": [
+          "*.test.ts"
+        ]
       }
     ]
   }

@@ -33,7 +33,7 @@ async function runRoute(body: Body, routes: Methods, ws: any) {
 }
 
 function registerSubscription(method: string, ws: any) {
-  return (data: any) => {
+  return (...data: any[]) => {
     ws.send({ error: false, data, route: method, subscribe: true })
   }
 }

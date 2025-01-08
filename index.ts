@@ -1,5 +1,5 @@
 import { type SafeParseReturnType, type ZodTypeAny, z as zod } from 'zod'
-import type { Body, Handler, JsonSerializable, Methods } from './types'
+import type { Body, Handler, JsonSerializable, Methods, Subscription } from './types'
 
 type MappedMethods<T extends Methods> = {
   [K in keyof T]: T[K] extends Handler
@@ -9,10 +9,12 @@ type MappedMethods<T extends Methods> = {
         validation?: SafeParseReturnType<any, any>
         subscribe?: (callback: (data: any) => void) => void
       }>
-    : (callback: (data: T) => void) => Promise<void>
+    : T[K] extends Subscription
+      ? (callback: (...data: T[K]) => void) => Promise<void>
+      : never
 }
 
-const subscribers: Record<string, ((data: any) => void)[]> = {}
+const subscribers: Record<string, ((...data: any[]) => void)[]> = {}
 
 export function api<T extends Methods>(methods: T): MappedMethods<T> {
   return methods as unknown as MappedMethods<T>
@@ -95,19 +97,45 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      if (data.subscribed === true) {
-        if (state.message) {
-          state.message({ error: false }) // Resolve promise to confirm subscription to client.
-          resetMessage()
-          return
-        }
-      }
-      if (data.subscribe && subscribers[data.route]) {
-        for (const subscriber of subscribers[data.route] ?? []) {
-          subscriber(data)
-        }
+      const { subscribed, subscribe, route, error, data: responseData } = data
+
+      if (handleSubscriptionConfirmation(subscribed)) {
         return
       }
+      if (handleSubscriptionNotification(subscribe, route, error, responseData)) {
+        return
+      }
+
+      handleMessageResponse(data)
+    }
+
+    function handleSubscriptionConfirmation(subscribed: boolean) {
+      if (subscribed && state.message) {
+        state.message({ error: false })
+        resetMessage()
+        return true
+      }
+      return false
+    }
+
+    function handleSubscriptionNotification(subscribe: boolean, route: string, error: boolean, responseData: any[]) {
+      if (error) {
+        console.log(`Erroneous subscription response received for ${route}.`)
+      }
+      if (subscribe && subscribers[route]) {
+        notifySubscribers(route, responseData)
+        return true
+      }
+      return false
+    }
+
+    function notifySubscribers(route: string, responseData: any[]) {
+      for (const subscriber of subscribers[route] ?? []) {
+        subscriber(...(responseData.length > 1 ? responseData : [responseData[0]]))
+      }
+    }
+
+    function handleMessageResponse(data: any) {
       if (state.message) {
         state.message({ ...data, route: undefined })
       }
@@ -144,5 +172,5 @@ export function subscribe<T extends ZodTypeAny[]>(...inputs: T) {
   return [
     // @ts-ignore zod.tuple working, but types fail...
     Array.isArray(inputs) ? zod.tuple(inputs) : inputs,
-  ] as unknown as T
+  ] as unknown as { [K in keyof T]: zod.infer<T[K]> }
 }
