@@ -48,26 +48,37 @@ function client(options) {
         }
     });
 }
+function checkIfSubscription(args) {
+    return typeof args[0] === 'function';
+}
+function sendSocketMessage(socket, route, args, isSubscription, options) {
+    socket.send(JSON.stringify({
+        method: route,
+        data: isSubscription ? args[1] : args,
+        context: typeof (options === null || options === void 0 ? void 0 : options.context) === 'function' ? options.context() : (options === null || options === void 0 ? void 0 : options.context) ?? {},
+        subscription: isSubscription
+    }));
+}
+function addSubscriber(route, callback) {
+    var _subscribers_route;
+    if (!subscribers[route]) {
+        subscribers[route] = [];
+    }
+    (_subscribers_route = subscribers[route]) === null || _subscribers_route === void 0 ? void 0 : _subscribers_route.push(callback);
+}
 function socketClient(options) {
     return new Promise((done)=>{
+        const socket = new WebSocket((options === null || options === void 0 ? void 0 : options.url) ?? 'ws://localhost:3000/api');
         const handler = new Proxy({}, {
             get (_target, route) {
                 return async function() {
                     for(var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++){
                         args[_key] = arguments[_key];
                     }
-                    socket.send(JSON.stringify({
-                        method: route,
-                        data: args,
-                        context: typeof (options === null || options === void 0 ? void 0 : options.context) === 'function' ? options.context() : (options === null || options === void 0 ? void 0 : options.context) ?? {}
-                    }));
-                    const isSubscription = typeof args[0] === 'function';
+                    const isSubscription = checkIfSubscription(args);
+                    sendSocketMessage(socket, route, args, isSubscription, options);
                     if (isSubscription) {
-                        var _subscribers_route;
-                        if (!subscribers[route]) {
-                            subscribers[route] = [];
-                        }
-                        (_subscribers_route = subscribers[route]) === null || _subscribers_route === void 0 ? void 0 : _subscribers_route.push(args[0]);
+                        addSubscriber(route, args[0]);
                     }
                     return new Promise((innerDone)=>{
                         state.message = innerDone;
@@ -75,7 +86,6 @@ function socketClient(options) {
                 };
             }
         });
-        const socket = new WebSocket((options === null || options === void 0 ? void 0 : options.url) ?? 'ws://localhost:3000/api');
         const state = {
             message: false
         };
@@ -122,9 +132,7 @@ function socketClient(options) {
         }
         function notifySubscribers(route, responseData) {
             for (const subscriber of subscribers[route] ?? []){
-                subscriber(...responseData.length > 1 ? responseData : [
-                    responseData[0]
-                ]);
+                subscriber(responseData.length === 1 ? responseData[0] : responseData);
             }
         }
         function handleMessageResponse(data) {
@@ -160,13 +168,17 @@ function index_route() {
     };
 }
 function index_subscribe() {
-    for(var _len = arguments.length, inputs = new Array(_len), _key = 0; _key < _len; _key++){
-        inputs[_key] = arguments[_key];
+    for(var _len = arguments.length, output = new Array(_len), _key = 0; _key < _len; _key++){
+        output[_key] = arguments[_key];
     }
-    return [
+    // TODO can make function all internal if no filter needed.
+    return (filter)=>{
         // @ts-ignore zod.tuple working, but types fail...
-        Array.isArray(inputs) ? zod.tuple(inputs) : inputs
-    ];
+        return [
+            filter,
+            zod.tuple(output)
+        ];
+    };
 }
 
 ;// CONCATENATED MODULE: ./index.tsx
