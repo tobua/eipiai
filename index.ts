@@ -10,7 +10,7 @@ type MappedMethods<T extends Methods> = {
         subscribe?: (callback: (data: any) => void) => void
       }>
     : T[K] extends Subscription
-      ? (callback: (...data: T[K]) => void) => Promise<void>
+      ? (callback: (data: T[K][0][0]) => void, ...filter: T[K][1]) => Promise<void>
       : never
 }
 
@@ -49,29 +49,49 @@ export function client<T extends ReturnType<typeof api>>(options?: {
   })
 }
 
+function checkIfSubscription(args: JsonSerializable[]): boolean {
+  return typeof args[0] === 'function'
+}
+
+function sendSocketMessage(
+  socket: WebSocket,
+  route: string,
+  args: JsonSerializable[],
+  isSubscription: boolean,
+  options?: { context?: (() => JsonSerializable) | JsonSerializable },
+) {
+  socket.send(
+    JSON.stringify({
+      method: route,
+      data: isSubscription ? args[1] : args,
+      context: typeof options?.context === 'function' ? options.context() : (options?.context ?? {}),
+      subscription: isSubscription,
+    } as Body),
+  )
+}
+
+function addSubscriber(route: string, callback: (data: any) => void) {
+  if (!subscribers[route]) {
+    subscribers[route] = []
+  }
+  subscribers[route]?.push(callback)
+}
+
 export function socketClient<T extends ReturnType<typeof api>>(options?: {
   url?: string
   context?: (() => JsonSerializable) | JsonSerializable
 }): Promise<{ client: T; close: () => void }> {
   return new Promise((done) => {
+    const socket = new WebSocket(options?.url ?? 'ws://localhost:3000/api')
+
     const handler = new Proxy({} as T, {
       get(_target, route: string) {
         return async (...args: JsonSerializable[]) => {
-          socket.send(
-            JSON.stringify({
-              method: route,
-              data: args,
-              context: typeof options?.context === 'function' ? options.context() : (options?.context ?? {}),
-            } as Body),
-          )
-
-          const isSubscription = typeof args[0] === 'function'
+          const isSubscription = checkIfSubscription(args)
+          sendSocketMessage(socket, route, args, isSubscription, options)
 
           if (isSubscription) {
-            if (!subscribers[route]) {
-              subscribers[route] = []
-            }
-            subscribers[route]?.push(args[0] as unknown as (data: any) => void)
+            addSubscriber(route, args[0] as unknown as (data: any) => void)
           }
 
           return new Promise((innerDone) => {
@@ -81,7 +101,6 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
       },
     })
 
-    const socket = new WebSocket(options?.url ?? 'ws://localhost:3000/api')
     const state: { message: false | ((value: any) => void) } = {
       message: false,
     }
@@ -131,7 +150,7 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
 
     function notifySubscribers(route: string, responseData: any[]) {
       for (const subscriber of subscribers[route] ?? []) {
-        subscriber(...(responseData.length > 1 ? responseData : [responseData[0]]))
+        subscriber(responseData.length === 1 ? responseData[0] : responseData)
       }
     }
 
@@ -168,9 +187,10 @@ export function route<T extends ZodTypeAny[]>(...inputs: T) {
   }
 }
 
-export function subscribe<T extends ZodTypeAny[]>(...inputs: T) {
-  return [
+export function subscribe<T extends ZodTypeAny[], U extends any[]>(...output: T) {
+  // TODO can make function all internal if no filter needed.
+  return (filter?: (...values: U) => boolean) => {
     // @ts-ignore zod.tuple working, but types fail...
-    Array.isArray(inputs) ? zod.tuple(inputs) : inputs,
-  ] as unknown as { [K in keyof T]: zod.infer<T[K]> }
+    return [filter, zod.tuple(output)] as unknown as [{ [K in keyof T]: zod.infer<T[K]> }, U]
+  }
 }

@@ -5,9 +5,9 @@ import { startWebsocketServer } from './server'
 const methods = {
   listPosts: route()(() => [1, 2, 3]),
   getPost: route(z.number())((_, id) => [id]),
-  subscribePosts: subscribe(z.object({ text: z.string() })),
-  subscribePost: subscribe(z.number()),
-  subscribeMultiplePost: subscribe(z.number(), z.string()),
+  subscribePosts: subscribe(z.object({ text: z.string() }))(),
+  subscribePost: subscribe(z.number())((id: number) => id % 2 === 0),
+  subscribeMultiplePost: subscribe(z.tuple([z.number(), z.string()]))(),
 }
 
 const routes = api(methods)
@@ -44,7 +44,7 @@ test('Initializes client and subscribes to various routes.', async () => {
   expect(subscribePostsMock.mock.calls[0][0]).toEqual(data)
 
   const subscribePostMock = mock<(data: number) => void>()
-  client.subscribePost(subscribePostMock) // Skipping await
+  client.subscribePost(subscribePostMock, 2) // Skipping await
 
   expect(subscriptions.subscribePost).not.toBeDefined()
   await wait()
@@ -64,7 +64,20 @@ test('Initializes client and subscribes to various routes.', async () => {
 
   expect(subscribePostMock.mock.calls[1][0]).toBe(10)
 
-  const subscribeMultiplePostMock = mock<(first: number, second: string) => void>()
+  const subscribePostFilteredMock = mock<(data: number) => void>()
+  await client.subscribePost(subscribePostFilteredMock, 1) // Odd number, filtered out on server.
+
+  expect(subscriptions.subscribePost).toBeDefined()
+
+  if (subscriptions.subscribePost) {
+    subscriptions.subscribePost(5)
+    subscriptions.subscribePost(10)
+    await wait()
+  }
+
+  expect(subscribePostFilteredMock.mock.calls.length).toBe(0)
+
+  const subscribeMultiplePostMock = mock<(data: [first: number, second: string]) => void>()
   await client.subscribeMultiplePost(subscribeMultiplePostMock)
 
   await wait()
@@ -74,7 +87,7 @@ test('Initializes client and subscribes to various routes.', async () => {
     await wait()
   }
 
-  expect(subscribeMultiplePostMock.mock.calls[0]).toEqual([1, '1'])
+  expect(subscribeMultiplePostMock.mock.calls[0][0]).toEqual([1, '1'])
 
   close()
 })

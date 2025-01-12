@@ -32,9 +32,12 @@ async function runRoute(body: Body, routes: Methods, ws: any) {
   ws.send({ error, data, route: body.method })
 }
 
-function registerSubscription(method: string, ws: any) {
+function registerSubscription(method: string, filter: any, routes: Methods, ws: any) {
   return (...data: any[]) => {
-    ws.send({ error: false, data, route: method, subscribe: true })
+    if (typeof routes[method][0] === 'function' && !routes[method][0](filter)) {
+      return
+    }
+    ws.send({ error: false, data, route: method, subscribe: true }) // TODO is sending subscribe true.
   }
 }
 
@@ -56,22 +59,22 @@ export function socket(routes: Methods, options?: { path?: string }) {
     const app = eri.ws(options?.path ?? 'api', {
       body: t.Object({
         method: t.String(),
-        data: t.Any(),
+        data: t.Optional(t.Any()),
         context: t.Any(),
-        update: t.Optional(t.Boolean()),
+        update: t.Optional(t.Boolean()), // TODO unused?
+        subscription: t.Boolean(),
       }),
       query: t.Object({}),
       message(ws, message: Body) {
         if (!message.method) {
           return ws.send({ error: true })
         }
-        const route = routes[message.method] as unknown as []
-        if (route.length > 1) {
-          runRoute(message, routes, ws)
-        } else {
-          subscriptions[message.method] = registerSubscription(message.method, ws)
+        if (message.subscription) {
+          subscriptions[message.method] = registerSubscription(message.method, message.data, routes, ws)
           return ws.send({ error: false, subscribed: true })
         }
+
+        runRoute(message, routes, ws)
       },
     })
 

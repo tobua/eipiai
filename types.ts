@@ -4,7 +4,7 @@ export type JsonSerializable = string | number | boolean | null | { [key: string
 export type Handler = (...args: any[]) => any
 export type Subscription = any[]
 export type Methods = { [key: string]: Handler | Subscription | undefined }
-export type Body = { method: string; data?: JsonSerializable[]; context?: Record<string, JsonSerializable> }
+export type Body = { method: string; data?: JsonSerializable[]; context?: Record<string, JsonSerializable>; subscription?: boolean }
 
 export const bodySchema = z
   .object({
