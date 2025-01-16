@@ -64,6 +64,7 @@ export const routes = api({
   allPosts: route()((_) => { return [{ id: 0, text: 'Hello World' }] })
 })
 
+const path = 'data'
 const { inject, subscriptions } = socket(methods, { path })
 new Elysia().use(inject).listen(port)
 

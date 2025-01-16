@@ -1,5 +1,4 @@
-import type Elysia from 'elysia'
-import { t } from 'elysia'
+import { type Elysia, t } from 'elysia'
 import type { z } from 'zod'
 import { executeHandler, readBody, validateInputs } from './server'
 import type { Body, Handler, Methods } from './types'

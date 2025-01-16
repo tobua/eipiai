@@ -1,8 +1,7 @@
-import type Elysia from 'elysia'
-import { t } from 'elysia'
+import { type Elysia, t } from 'elysia'
 import type { z } from 'zod'
 import { executeHandler, validateInputs } from './server'
-import type { Body, Handler, Methods } from './types'
+import type { Body, Handler, Methods, ServerResponse } from './types'
 
 async function runRoute(body: Body, routes: Methods, ws: any) {
   const [handler, inputs] = routes[body.method] as unknown as [Handler, z.ZodTypeAny]
@@ -11,7 +10,7 @@ async function runRoute(body: Body, routes: Methods, ws: any) {
     const validationResult = validateInputs(body.data, inputs)
 
     if (validationResult) {
-      return ws.send({ error: true, validation: validationResult, route: body.method })
+      return ws.send({ error: true, validation: validationResult, route: body.method, id: body.id } as ServerResponse)
     }
   } else {
     body.data = undefined
@@ -29,15 +28,15 @@ async function runRoute(body: Body, routes: Methods, ws: any) {
     },
   )
 
-  ws.send({ error, data, route: body.method })
+  ws.send({ error, data, route: body.method, id: body.id } as ServerResponse)
 }
 
-function registerSubscription(method: string, filter: any, routes: Methods, ws: any) {
+function registerSubscription(message: Body, routes: Methods, ws: any) {
   return (...data: any[]) => {
-    if (typeof routes[method][0] === 'function' && !routes[method][0](filter)) {
+    if (routes[message.method] && typeof routes[message.method][0] === 'function' && !routes[message.method][0](message.data)) {
       return
     }
-    ws.send({ error: false, data, route: method, subscribe: true }) // TODO is sending subscribe true.
+    ws.send({ error: false, data, route: message.method, subscribe: true, id: message.id } as ServerResponse) // TODO is sending subscribe true.
   }
 }
 
@@ -63,15 +62,16 @@ export function socket(routes: Methods, options?: { path?: string }) {
         context: t.Any(),
         update: t.Optional(t.Boolean()), // TODO unused?
         subscription: t.Boolean(),
+        id: t.Number(),
       }),
       query: t.Object({}),
       message(ws, message: Body) {
         if (!message.method) {
-          return ws.send({ error: true })
+          return ws.send({ error: true, id: message.id } as ServerResponse)
         }
         if (message.subscription) {
-          subscriptions[message.method] = registerSubscription(message.method, message.data, routes, ws)
-          return ws.send({ error: false, subscribed: true })
+          subscriptions[message.method] = registerSubscription(message, routes, ws)
+          return ws.send({ error: false, subscribed: true, id: message.id } as ServerResponse)
         }
 
         runRoute(message, routes, ws)

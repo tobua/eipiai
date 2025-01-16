@@ -1,5 +1,5 @@
 import { type SafeParseReturnType, type ZodTypeAny, z as zod } from 'zod'
-import type { Body, Handler, JsonSerializable, Methods, Subscription } from './types'
+import type { Body, Handler, JsonSerializable, Methods, ServerResponse, Subscription } from './types'
 
 type MappedMethods<T extends Methods> = {
   [K in keyof T]: T[K] extends Handler
@@ -60,14 +60,17 @@ function sendSocketMessage(
   isSubscription: boolean,
   options?: { context?: (() => JsonSerializable) | JsonSerializable },
 ) {
+  const id = Math.floor(Math.random() * 1000000)
   socket.send(
     JSON.stringify({
       method: route,
       data: isSubscription ? args[1] : args,
       context: typeof options?.context === 'function' ? options.context() : (options?.context ?? {}),
       subscription: isSubscription,
+      id,
     } as Body),
   )
+  return id
 }
 
 function addSubscriber(route: string, callback: (data: any) => void) {
@@ -88,37 +91,31 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
       get(_target, route: string) {
         return async (...args: JsonSerializable[]) => {
           const isSubscription = checkIfSubscription(args)
-          sendSocketMessage(socket, route, args, isSubscription, options)
+          const id = sendSocketMessage(socket, route, args, isSubscription, options)
 
           if (isSubscription) {
             addSubscriber(route, args[0] as unknown as (data: any) => void)
           }
 
           return new Promise((innerDone) => {
-            state.message = innerDone
+            openHandlers.set(id, innerDone)
           })
         }
       },
     })
 
-    const state: { message: false | ((value: any) => void) } = {
-      message: false,
-    }
-
-    function resetMessage() {
-      state.message = false
-    }
+    const openHandlers = new Map<number, (value: any) => void>()
 
     socket.onopen = () => {
-      resetMessage()
+      openHandlers.clear()
       done({ client: handler, close: () => socket.close() })
     }
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      const { subscribed, subscribe, route, error, data: responseData } = data
+      const { subscribed, subscribe, route, error, data: responseData, id } = data as ServerResponse
 
-      if (handleSubscriptionConfirmation(subscribed)) {
+      if (handleSubscriptionConfirmation(id, subscribed)) {
         return
       }
       if (handleSubscriptionNotification(subscribe, route, error, responseData)) {
@@ -128,10 +125,13 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
       handleMessageResponse(data)
     }
 
-    function handleSubscriptionConfirmation(subscribed: boolean) {
-      if (subscribed && state.message) {
-        state.message({ error: false })
-        resetMessage()
+    function handleSubscriptionConfirmation(id: number, subscribed?: boolean) {
+      if (subscribed && openHandlers.has(id)) {
+        const handler = openHandlers.get(id)
+        if (handler) {
+          handler({ error: false })
+          openHandlers.delete(id)
+        }
         return true
       }
       return false
@@ -155,17 +155,21 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
     }
 
     function handleMessageResponse(data: any) {
-      if (state.message) {
-        state.message({ ...data, route: undefined })
+      if (openHandlers.has(data.id)) {
+        const handler = openHandlers.get(data.id)
+        if (handler) {
+          handler({ error: data.error, data: data.data })
+          openHandlers.delete(data.id)
+        }
       }
-      resetMessage()
     }
 
     socket.onerror = () => {
-      if (state.message) {
-        state.message({ error: true })
-      }
-      resetMessage()
+      // Error all open handlers.
+      openHandlers.forEach((handler, id) => {
+        handler({ error: true })
+        openHandlers.delete(id)
+      })
     }
   })
 }
