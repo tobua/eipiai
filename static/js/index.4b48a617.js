@@ -52,12 +52,15 @@ function checkIfSubscription(args) {
     return typeof args[0] === 'function';
 }
 function sendSocketMessage(socket, route, args, isSubscription, options) {
+    const id = Math.floor(Math.random() * 1000000);
     socket.send(JSON.stringify({
         method: route,
         data: isSubscription ? args[1] : args,
         context: typeof (options === null || options === void 0 ? void 0 : options.context) === 'function' ? options.context() : (options === null || options === void 0 ? void 0 : options.context) ?? {},
-        subscription: isSubscription
+        subscription: isSubscription,
+        id
     }));
+    return id;
 }
 function addSubscriber(route, callback) {
     var _subscribers_route;
@@ -76,24 +79,19 @@ function socketClient(options) {
                         args[_key] = arguments[_key];
                     }
                     const isSubscription = checkIfSubscription(args);
-                    sendSocketMessage(socket, route, args, isSubscription, options);
+                    const id = sendSocketMessage(socket, route, args, isSubscription, options);
                     if (isSubscription) {
                         addSubscriber(route, args[0]);
                     }
                     return new Promise((innerDone)=>{
-                        state.message = innerDone;
+                        openHandlers.set(id, innerDone);
                     });
                 };
             }
         });
-        const state = {
-            message: false
-        };
-        function resetMessage() {
-            state.message = false;
-        }
+        const openHandlers = new Map();
         socket.onopen = ()=>{
-            resetMessage();
+            openHandlers.clear();
             done({
                 client: handler,
                 close: ()=>socket.close()
@@ -101,8 +99,8 @@ function socketClient(options) {
         };
         socket.onmessage = (event)=>{
             const data = JSON.parse(event.data);
-            const { subscribed, subscribe, route, error, data: responseData } = data;
-            if (handleSubscriptionConfirmation(subscribed)) {
+            const { subscribed, subscribe, route, error, data: responseData, id } = data;
+            if (handleSubscriptionConfirmation(id, subscribed)) {
                 return;
             }
             if (handleSubscriptionNotification(subscribe, route, error, responseData)) {
@@ -110,12 +108,15 @@ function socketClient(options) {
             }
             handleMessageResponse(data);
         };
-        function handleSubscriptionConfirmation(subscribed) {
-            if (subscribed && state.message) {
-                state.message({
-                    error: false
-                });
-                resetMessage();
+        function handleSubscriptionConfirmation(id, subscribed) {
+            if (subscribed && openHandlers.has(id)) {
+                const handler = openHandlers.get(id);
+                if (handler) {
+                    handler({
+                        error: false
+                    });
+                    openHandlers.delete(id);
+                }
                 return true;
             }
             return false;
@@ -136,21 +137,25 @@ function socketClient(options) {
             }
         }
         function handleMessageResponse(data) {
-            if (state.message) {
-                state.message({
-                    ...data,
-                    route: undefined
-                });
+            if (openHandlers.has(data.id)) {
+                const handler = openHandlers.get(data.id);
+                if (handler) {
+                    handler({
+                        error: data.error,
+                        data: data.data
+                    });
+                    openHandlers.delete(data.id);
+                }
             }
-            resetMessage();
         }
         socket.onerror = ()=>{
-            if (state.message) {
-                state.message({
+            // Error all open handlers.
+            openHandlers.forEach((handler, id)=>{
+                handler({
                     error: true
                 });
-            }
-            resetMessage();
+                openHandlers.delete(id);
+            });
         };
     });
 }
