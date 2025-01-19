@@ -1,4 +1,4 @@
-import { type SafeParseReturnType, type ZodTypeAny, z as zod } from 'zod'
+import { type SafeParseReturnType, type ZodIssue, type ZodTypeAny, z as zod } from 'zod'
 import type { Body, Handler, JsonSerializable, Methods, ServerResponse, Subscription } from './types'
 
 type MappedMethods<T extends Methods> = {
@@ -54,7 +54,7 @@ function checkIfSubscription(args: JsonSerializable[]): boolean {
 }
 
 function sendSocketMessage(
-  socket: WebSocket,
+  socket: any, // WebSocket will lead to conflict when undici-types installed.
   route: string,
   args: JsonSerializable[],
   isSubscription: boolean,
@@ -83,7 +83,7 @@ function addSubscriber(route: string, callback: (data: any) => void) {
 export function socketClient<T extends ReturnType<typeof api>>(options?: {
   url?: string
   context?: (() => JsonSerializable) | JsonSerializable
-}): Promise<{ client: T; close: () => void }> {
+}): Promise<{ client: T; close: () => void; error: boolean }> {
   return new Promise((done) => {
     const socket = new WebSocket(options?.url ?? 'ws://localhost:3000/api')
 
@@ -108,17 +108,17 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
 
     socket.onopen = () => {
       openHandlers.clear()
-      done({ client: handler, close: () => socket.close() })
+      done({ client: handler, close: () => socket.close(), error: false })
     }
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      const { subscribed, subscribe, route, error, data: responseData, id } = data as ServerResponse
+      const { subscribed, subscribe, route, error, data: responseData, id, validation } = data as ServerResponse
 
       if (handleSubscriptionConfirmation(id, subscribed)) {
         return
       }
-      if (handleSubscriptionNotification(subscribe, route, error, responseData)) {
+      if (handleSubscriptionNotification(subscribe, route, error, responseData, validation)) {
         return
       }
 
@@ -137,9 +137,16 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
       return false
     }
 
-    function handleSubscriptionNotification(subscribe: boolean, route: string, error: boolean, responseData: any[]) {
+    function handleSubscriptionNotification(
+      subscribe: boolean,
+      route: string,
+      error: boolean,
+      responseData: any[],
+      validation?: ZodIssue[],
+    ) {
       if (error) {
         console.log(`Erroneous subscription response received for ${route}.`)
+        console.log(validation) // TODO pretty print validation messages.
       }
       if (subscribe && subscribers[route]) {
         notifySubscribers(route, responseData)
@@ -165,6 +172,8 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
     }
 
     socket.onerror = () => {
+      console.error('Failed to start web socket.')
+      done({ error: true, client: {} as T, close: () => undefined })
       // Error all open handlers.
       openHandlers.forEach((handler, id) => {
         handler({ error: true })
