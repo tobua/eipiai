@@ -153,7 +153,7 @@ function getComponentRefsFromTree(node, result, flat) {
     }
     if (node.child) {
         const nested = getComponentRefsFromTree(node.child, flat ? result : [], flat, false);
-        if (!flat && nested.length) {
+        if (!flat && nested.length > 0) {
             if (result.length > 0) {
                 result.push(nested);
             } else {
@@ -191,8 +191,7 @@ function schedule(callback) {
     // requestIdleCallback polyfill (not supported in Safari)
     // https://github.com/pladaria/requestidlecallback-polyfill
     // See react scheduler for better implementation.
-    window.requestIdleCallback = window.requestIdleCallback || function idleCallbackPolyfill(innerCallback, // biome-ignore lint/correctness/noUnusedVariables: Default API, might be needed.
-    options) {
+    window.requestIdleCallback = window.requestIdleCallback || function idleCallbackPolyfill(innerCallback, _options) {
         const start = Date.now();
         setTimeout(()=>{
             innerCallback({
@@ -335,6 +334,7 @@ var types_Change = /*#__PURE__*/ function(Change) {
 ;// CONCATENATED MODULE: ./node_modules/epic-jsx/browser.ts
 
 
+
 const svgAndRegularTags = [
     'a',
     'canvas',
@@ -432,11 +432,22 @@ function updateNativeElement(element) {
         element.addEventListener(eventType, nextProps[name]);
     });
 }
+function mapLegacyProps(fiber) {
+    if (Object.hasOwn(fiber.props, 'className')) {
+        if (Object.hasOwn(fiber.props, 'class')) {
+            fiber.props.class = `${fiber.props.class} ${fiber.props.className}`;
+        } else {
+            fiber.props.class = fiber.props.className;
+        }
+        fiber.props.className = undefined;
+    }
+}
 function createNativeElement(fiber) {
     if (!fiber.type) {
         return undefined // Ignore fragments.
         ;
     }
+    mapLegacyProps(fiber);
     let element;
     if (fiber.type === 'TEXT_ELEMENT') {
         element = document.createTextNode('');
@@ -451,7 +462,12 @@ function createNativeElement(fiber) {
 }
 function commitDeletion(fiber, nativeParent) {
     if (fiber.native) {
-        nativeParent.removeChild(fiber.native);
+        try {
+            nativeParent.removeChild(fiber.native);
+        } catch (_error) {
+            // NOTE indicates a plugin error, should not happen.
+            log('Failed to remove node from the DOM', 'warning');
+        }
         fiber.change = undefined;
     } else if (fiber.child) {
         // Avoid another delete when visiting though siblings.
@@ -471,7 +487,7 @@ function commitFiber(fiber) {
         parent = parent.parent;
     }
     if (maxTries === 0) {
-        console.error('Ran out of tries at commitWork.');
+        log('Ran out of tries at commitFiber.', 'warning');
     }
     if (fiber.change === types_Change.Add && fiber.native) {
         var _parent_native;
@@ -510,7 +526,7 @@ function commit(context, fiber) {
         commitFiber(fiber.child);
     }
     // TODO check if dependencies changed.
-    if (Renderer.effects.length) {
+    if (Renderer.effects.length > 0) {
         for (const effect of Renderer.effects){
             effect();
         }
@@ -541,7 +557,8 @@ function reconcileChildren(context, current) {
         const element = children[index];
         let newFiber;
         // TODO also compare props.
-        const sameType = (element === null || element === void 0 ? void 0 : element.type) === (previous === null || previous === void 0 ? void 0 : previous.type);
+        const fragment = element === null || previous === null;
+        const sameType = !fragment && (element === null || element === void 0 ? void 0 : element.type) === (previous === null || previous === void 0 ? void 0 : previous.type);
         if (sameType && previous) {
             newFiber = {
                 type: previous.type,
@@ -600,7 +617,7 @@ function reconcileChildren(context, current) {
         }
     }
     if (maxTries === 0) {
-        console.error('Ran out of tries at reconcileChildren.', children);
+        log('Ran out of tries at reconcileChildren.', 'warning');
     }
 }
 function rerender(context, fiber) {
@@ -678,7 +695,7 @@ function render(context, fiber) {
         nextFiber = nextFiber.parent;
     }
     if (maxTries === 0) {
-        console.error('Ran out of tries at render.');
+        log('Ran out of tries at render.', 'warning');
     }
     return undefined;
 }
@@ -701,7 +718,7 @@ function process(deadline, context) {
         // Render current fiber.
         context.current = render(context, context.current);
         // Add next fiber if previous tree finished.
-        if (!context.current && context.pending.length) {
+        if (!context.current && context.pending.length > 0) {
             context.current = context.pending.shift();
             if (context.current) {
                 context.rendered.push(context.current);
@@ -711,16 +728,16 @@ function process(deadline, context) {
         shouldYield = deadline.timeRemaining() < 1;
     }
     if (maxTries === 0) {
-        console.error('Ran out of tries at process.');
+        log('Ran out of tries at process.', 'warning');
     }
     // Yielded if context.current not empty.
-    if (!context.current && context.rendered.length) {
+    if (!context.current && context.rendered.length > 0) {
         for (const fiber of context.rendered){
             commit(context, fiber);
         }
         context.rendered.length = 0;
     }
-    if (context.current || context.pending.length) {
+    if (context.current || context.pending.length > 0) {
         schedule((nextDeadline)=>process(nextDeadline, context));
     }
 }
@@ -746,6 +763,7 @@ const Renderer = {
 /* ESM default export */ const epic_jsx = ((/* unused pure expression or super */ null && (React)));
 const roots = new Map();
 // Imported by regular React runtime, implementation is guess.
+// @ts-ignore
 const Fragment = (/* unused pure expression or super */ null && (undefined)) // Symbol.for('react.fragment')
 ;
 const getRoot = (container)=>{
@@ -754,7 +772,7 @@ const getRoot = (container)=>{
     }
     const context = roots.get(container);
     // Ensure all work has passed.
-    if ((context === null || context === void 0 ? void 0 : context.pending.length) || (context === null || context === void 0 ? void 0 : context.rendered.length)) {
+    if (context && (context.pending.length > 0 || context.rendered.length > 0)) {
         processNow(context);
     }
     return context;
@@ -765,7 +783,7 @@ const getRoots = ()=>{
     ];
     // Ensure all work has passed.
     for (const context of contexts){
-        if (context.pending.length || context.rendered.length) {
+        if (context.pending.length > 0 || context.rendered.length > 0) {
             processNow(context);
         }
     }

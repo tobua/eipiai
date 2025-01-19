@@ -94,16 +94,17 @@ function socketClient(options) {
             openHandlers.clear();
             done({
                 client: handler,
-                close: ()=>socket.close()
+                close: ()=>socket.close(),
+                error: false
             });
         };
         socket.onmessage = (event)=>{
             const data = JSON.parse(event.data);
-            const { subscribed, subscribe, route, error, data: responseData, id } = data;
+            const { subscribed, subscribe, route, error, data: responseData, id, validation } = data;
             if (handleSubscriptionConfirmation(id, subscribed)) {
                 return;
             }
-            if (handleSubscriptionNotification(subscribe, route, error, responseData)) {
+            if (handleSubscriptionNotification(subscribe, route, error, responseData, validation)) {
                 return;
             }
             handleMessageResponse(data);
@@ -121,9 +122,11 @@ function socketClient(options) {
             }
             return false;
         }
-        function handleSubscriptionNotification(subscribe, route, error, responseData) {
+        function handleSubscriptionNotification(subscribe, route, error, responseData, validation) {
             if (error) {
                 console.log(`Erroneous subscription response received for ${route}.`);
+                console.log(validation) // TODO pretty print validation messages.
+                ;
             }
             if (subscribe && subscribers[route]) {
                 notifySubscribers(route, responseData);
@@ -149,6 +152,12 @@ function socketClient(options) {
             }
         }
         socket.onerror = ()=>{
+            console.error('Failed to start web socket.');
+            done({
+                error: true,
+                client: {},
+                close: ()=>undefined
+            });
             // Error all open handlers.
             openHandlers.forEach((handler, id)=>{
                 handler({
