@@ -88,3 +88,15 @@ await server.subscribePost((post) => console.log(post.id === 0), { id: 0 })
 
 const { error, data } = await server.allPosts()
 ```
+
+## Externally Importing Routes
+
+For the client, all you need from the server are the types. Because of this, it is possible to conditionally import these from an external location that is only available locally using the following trick. This will ensure that the types are available locally where you actually need them, **without causing an error** in the CI or when running the client separately in production.
+
+```ts
+import { client } from 'eipiai'
+
+let routes: typeof import('../server/routes').routes | undefined
+
+export const server = client<typeof routes>()
+```

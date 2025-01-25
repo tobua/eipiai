@@ -14,7 +14,7 @@ export function eipiai(routes: Methods, options?: { path?: string }) {
       async function post(request: Request) {
         const body = (await readBody(request)) as Body
 
-        if (!body.method) {
+        if (!(body.method && Object.hasOwn(routes, body.method))) {
           return Response.json({ error: true })
         }
 

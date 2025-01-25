@@ -66,9 +66,10 @@ export function socket(routes: Methods, options?: { path?: string }) {
       }),
       query: t.Object({}),
       message(ws, message: Body) {
-        if (!message.method) {
+        if (!(message.method && Object.hasOwn(routes, message.method))) {
           return ws.send({ error: true, id: message.id } as ServerResponse)
         }
+
         if (message.subscription) {
           subscriptions[message.method] = registerSubscription(message, routes, ws)
           return ws.send({ error: false, subscribed: true, id: message.id } as ServerResponse)

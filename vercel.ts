@@ -12,7 +12,7 @@ export function vercel(routes: Methods) {
 
     const body = validation.data as Body
 
-    if (!body.method) {
+    if (!(body.method && Object.hasOwn(routes, body.method))) {
       return Response.json({ error: true })
     }
 

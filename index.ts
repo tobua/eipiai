@@ -112,7 +112,7 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
     }
 
     socket.onmessage = (event) => {
-      const data = JSON.parse(event.data)
+      const data = JSON.parse(event.data as string) // Fails with some dependencies without cast.
       const { subscribed, subscribe, route, error, data: responseData, id, validation } = data as ServerResponse
 
       if (handleSubscriptionConfirmation(id, subscribed)) {

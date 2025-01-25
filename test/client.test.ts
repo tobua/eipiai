@@ -58,6 +58,12 @@ test('Empty return will be shown as success.', async () => {
   expect(await data.emptyReturn()).toEqual({ error: false, data: undefined })
 })
 
+test('Non existing route will error gracefully.', async () => {
+  const data = client<typeof routes>({ context: { uid: '123' } })
+  // @ts-expect-error
+  expect(await data.nonExisting()).toEqual({ error: true })
+})
+
 test('Custom shared variables can be configured.', async () => {
   let state = 1
   const data = client<typeof routes>({
