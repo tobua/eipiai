@@ -1,18 +1,18 @@
 (() => { // webpackBootstrap
 "use strict";
 var __webpack_modules__ = ({
-"267": (function (__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
+267: (function (__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
 
 // EXTERNAL MODULE: ./node_modules/epic-jsx/jsx.ts
-var jsx = __webpack_require__("129");
+var jsx = __webpack_require__(129);
 // EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 5 modules
-var epic_jsx = __webpack_require__("545");
+var epic_jsx = __webpack_require__(545);
 // EXTERNAL MODULE: ./node_modules/epic-state/plugin.ts
-var epic_state_plugin = __webpack_require__("93");
+var epic_state_plugin = __webpack_require__(93);
 // EXTERNAL MODULE: ./node_modules/epic-state/index.ts + 3 modules
-var epic_state = __webpack_require__("220");
+var epic_state = __webpack_require__(220);
 // EXTERNAL MODULE: ./node_modules/epic-state/plugin/epic-jsx.ts
-var plugin_epic_jsx = __webpack_require__("841");
+var plugin_epic_jsx = __webpack_require__(841);
 ;// CONCATENATED MODULE: ../index.ts
 
 const subscribers = (/* unused pure expression or super */ null && ({}));
@@ -99,7 +99,8 @@ function socketClient(options) {
             });
         };
         socket.onmessage = (event)=>{
-            const data = JSON.parse(event.data);
+            const data = JSON.parse(event.data) // Fails with some dependencies without cast.
+            ;
             const { subscribed, subscribe, route, error, data: responseData, id, validation } = data;
             if (handleSubscriptionConfirmation(id, subscribed)) {
                 return;
@@ -376,7 +377,7 @@ __webpack_require__.O = function (result, chunkIds, fn, priority) {
 // webpack/runtime/rspack_version
 (() => {
 __webpack_require__.rv = function () {
-	return "1.1.8";
+	return "1.2.2";
 };
 
 })();
@@ -432,14 +433,14 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.1.8";
+__webpack_require__.ruid = "bundler=rspack@1.2.2";
 
 })();
 /************************************************************************/
 // startup
 // Load entry module and return exports
 // This entry module depends on other loaded chunks and execution need to be delayed
-var __webpack_exports__ = __webpack_require__.O(undefined, ["663"], function() { return __webpack_require__("267") });
+var __webpack_exports__ = __webpack_require__.O(undefined, ["663"], function() { return __webpack_require__(267) });
 __webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 })()
 ;

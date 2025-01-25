@@ -1,5 +1,5 @@
 (self['webpackChunkdemo'] = self['webpackChunkdemo'] || []).push([["663"], {
-"296": (function (module) {
+296: (function (module) {
 function debounce(function_, wait = 100, options = {}) {
 	if (typeof function_ !== 'function') {
 		throw new TypeError(`Expected the first parameter to be a function, got \`${typeof function_}\`.`);
@@ -106,7 +106,7 @@ module.exports = debounce;
 
 
 }),
-"545": (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+545: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
@@ -116,10 +116,10 @@ __webpack_require__.d(__webpack_exports__, {
   sY: () => (/* binding */ epic_jsx_render)
 });
 
-// UNUSED EXPORTS: createElement, unmountAll, useEffect, useMemo, useCallback, jsxs, jsx, unmount, jsxDEV, useState, cloneElement, default, useRef, Fragment, getRoot
+// UNUSED EXPORTS: createElement, unmountAll, useEffect, debounce, useMemo, useCallback, jsxs, jsx, unmount, jsxDEV, useState, cloneElement, default, useRef, Fragment, getRoot
 
 // EXTERNAL MODULE: ./node_modules/logua/dist/index.js
-var dist = __webpack_require__("224");
+var dist = __webpack_require__(224);
 ;// CONCATENATED MODULE: ./node_modules/epic-jsx/helper.ts
 
 const log = (0,dist/* create */.U)('epic-jsx', 'blue');
@@ -218,6 +218,16 @@ function multipleInstancesWarning() {
     } else {
         __webpack_require__.g.__epicJsx = true;
     }
+}
+function debounce(method, wait) {
+    let timeout;
+    return function() {
+        for(var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++){
+            args[_key] = arguments[_key];
+        }
+        clearTimeout(timeout);
+        timeout = setTimeout(()=>method.apply(this, args), wait);
+    };
 }
 
 ;// CONCATENATED MODULE: ./node_modules/svg-tag-names/index.js
@@ -639,8 +649,13 @@ function updateFunctionComponent(context, fiber) {
     fiber.hooks.length = 0;
     Renderer.context = context;
     fiber.afterListeners = [];
+    // TODO id in fiber shouldn't be optional, assign during creation.
+    if (!fiber.id) {
+        var _fiber_previous;
+        fiber.id = ((_fiber_previous = fiber.previous) === null || _fiber_previous === void 0 ? void 0 : _fiber_previous.id) ?? Math.floor(Math.random() * 1000000);
+    }
     fiber.component = {
-        id: '123',
+        id: fiber.id,
         root: fiber,
         context,
         rerender: ()=>rerender(context, fiber),
@@ -848,11 +863,11 @@ multipleInstancesWarning();
 
 
 }),
-"129": (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+129: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  BX: function() { return jsxs; },
-  tZ: function() { return jsx; }
+  BX: () => (jsxs),
+  tZ: () => (jsx)
 });
 function createTextElement(text) {
     return {
@@ -909,18 +924,18 @@ function cloneElement(element, props) {
 
 
 }),
-"164": (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+164: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  $N: function() { return canProxy; },
-  J1: function() { return listGetters; },
-  Kb: function() { return createBaseObject; },
-  Kn: function() { return isObject; },
-  ZN: function() { return updateProxyValues; },
-  cM: function() { return log; },
-  fm: function() { return newProxy; },
-  n4: function() { return isSetter; },
-  u0: function() { return canPolyfill; }
+  $N: () => (canProxy),
+  J1: () => (listGetters),
+  Kb: () => (createBaseObject),
+  Kn: () => (isObject),
+  ZN: () => (updateProxyValues),
+  cM: () => (log),
+  fm: () => (newProxy),
+  n4: () => (isSetter),
+  u0: () => (canPolyfill)
 });
 /* ESM import */var logua__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(224);
 
@@ -988,7 +1003,7 @@ function updateProxyValues(existingObject, newObject) {
 
 
 }),
-"220": (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+220: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
@@ -999,9 +1014,9 @@ __webpack_require__.d(__webpack_exports__, {
 // UNUSED EXPORTS: removeAllPlugins, list, ref, run, batch, observe, remove, plugin
 
 // EXTERNAL MODULE: ./node_modules/epic-state/helper.ts
-var helper = __webpack_require__("164");
+var helper = __webpack_require__(164);
 // EXTERNAL MODULE: ./node_modules/epic-state/plugin.ts
-var epic_state_plugin = __webpack_require__("93");
+var epic_state_plugin = __webpack_require__(93);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/batching.ts
 
 
@@ -1317,7 +1332,7 @@ function derive(proxy) {
 }
 
 // EXTERNAL MODULE: ./node_modules/epic-state/types.ts + 1 modules
-var types = __webpack_require__("266");
+var types = __webpack_require__(266);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/index.ts
 
 
@@ -1520,12 +1535,12 @@ function remove(proxyObject) {
 
 
 }),
-"93": (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+93: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  BA: function() { return plugin; },
-  bP: function() { return initializePlugins; },
-  xv: function() { return callPlugins; }
+  BA: () => (plugin),
+  bP: () => (initializePlugins),
+  xv: () => (callPlugins)
 });
 /* ESM import */var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(266);
 
@@ -1589,10 +1604,10 @@ function removeAllPlugins() {
 
 
 }),
-"841": (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+841: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  $: function() { return connect; }
+  $: () => (connect)
 });
 /* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(545);
 /* ESM import */var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(164);
@@ -1666,7 +1681,7 @@ const connect = (initialize)=>{
 
 
 }),
-"266": (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+266: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
@@ -1731,10 +1746,10 @@ class TupleArrayMap {
 
 
 }),
-"224": (function (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+224: (function (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  U: function() { return create; }
+  U: () => (create)
 });
 /* ESM import */var debounce__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(296);
 // index.ts
