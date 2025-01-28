@@ -80,6 +80,8 @@ function addSubscriber(route: string, callback: (data: any) => void) {
   subscribers[route]?.push(callback)
 }
 
+const isSocketClosed = (socket: WebSocket) => socket.readyState === socket.CLOSED || socket.readyState === socket.CLOSING
+
 export function socketClient<T extends ReturnType<typeof api>>(options?: {
   url?: string
   context?: (() => JsonSerializable) | JsonSerializable
@@ -90,6 +92,10 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
     const handler = new Proxy({} as T, {
       get(_target, route: string) {
         return async (...args: JsonSerializable[]) => {
+          if (isSocketClosed(socket)) {
+            return { error: true }
+          }
+
           const isSubscription = checkIfSubscription(args)
           const id = sendSocketMessage(socket, route, args, isSubscription, options)
 

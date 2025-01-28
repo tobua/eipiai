@@ -7,14 +7,14 @@
   "author": "Matthias Giger",
   "scripts": {
     "check": "biome check --write .",
-    "types": "tsc && tsc --noEmit --project ./test/tsconfig.json"
+    "types": "tsc && tsc --project ./test/tsconfig.json"
   },
   "dependencies": {
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@types/bun": "^1.2.0",
+    "@types/bun": "^1.2.1",
     "elysia": "^1.2.10",
     "typescript": "^5.7.3",
     "zero-configuration": "^0.18.0"

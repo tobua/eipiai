@@ -91,3 +91,11 @@ test('Initializes client and subscribes to various routes.', async () => {
 
   close()
 })
+
+test('Returns error when socket connection closed.', async () => {
+  const { client, close } = await socketClient<typeof routes>({ url, context: { uid: '123' } })
+
+  close()
+  const { error } = await client.listPosts()
+  expect(error).toBe(true)
+})

@@ -45,6 +45,8 @@ export function eipiai(routes: Methods, options?: { path?: string }) {
       },
     )
 
+    eri.get(options?.path ?? 'api', () => new Response('eipiai running!'))
+
     return app
   }
 }
