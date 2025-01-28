@@ -69,6 +69,7 @@ function addSubscriber(route, callback) {
     }
     (_subscribers_route = subscribers[route]) === null || _subscribers_route === void 0 ? void 0 : _subscribers_route.push(callback);
 }
+const isSocketClosed = (socket)=>socket.readyState === socket.CLOSED || socket.readyState === socket.CLOSING;
 function socketClient(options) {
     return new Promise((done)=>{
         const socket = new WebSocket((options === null || options === void 0 ? void 0 : options.url) ?? 'ws://localhost:3000/api');
@@ -77,6 +78,11 @@ function socketClient(options) {
                 return async function() {
                     for(var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++){
                         args[_key] = arguments[_key];
+                    }
+                    if (isSocketClosed(socket)) {
+                        return {
+                            error: true
+                        };
                     }
                     const isSubscription = checkIfSubscription(args);
                     const id = sendSocketMessage(socket, route, args, isSubscription, options);

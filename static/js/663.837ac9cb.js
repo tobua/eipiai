@@ -220,7 +220,8 @@ function multipleInstancesWarning() {
     }
 }
 function debounce(method, wait) {
-    let timeout;
+    let timeout// Avoid using NodeJS.Timeout to avoid clash with Bun types.
+    ;
     return function() {
         for(var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++){
             args[_key] = arguments[_key];
@@ -568,45 +569,19 @@ function reconcileChildren(context, current) {
         let newFiber;
         // TODO also compare props.
         const fragment = element === null || previous === null;
-        const sameType = !fragment && (element === null || element === void 0 ? void 0 : element.type) === (previous === null || previous === void 0 ? void 0 : previous.type);
-        if (sameType && previous) {
-            newFiber = {
-                type: previous.type,
-                props: (element === null || element === void 0 ? void 0 : element.props) ?? (previous === null || previous === void 0 ? void 0 : previous.props),
-                native: previous.native,
-                parent: current,
-                previous,
-                hooks: previous.hooks,
-                change: types_Change.Update
-            };
+        const isSameType = !fragment && (element === null || element === void 0 ? void 0 : element.type) === (previous === null || previous === void 0 ? void 0 : previous.type);
+        if (isSameType && previous) {
+            newFiber = createUpdatedFiber(current, previous, element);
+        }
+        if (element && isSameType && !previous) {
+            newFiber = createNewFiber(current, element, previous);
         }
         // Newly added (possibly unnecessary).
-        if (element && sameType && !previous) {
-            newFiber = {
-                type: element.type,
-                props: element.props,
-                native: undefined,
-                parent: current,
-                previous: undefined,
-                // @ts-ignore TODO previous type is not inferred, probably becuase of later reassignment or parse issues.
-                hooks: typeof element.type === 'function' ? previous.hooks : undefined,
-                change: types_Change.Add
-            };
+        if (element && !isSameType) {
+            newFiber = createNewFiber(current, element, previous);
         }
-        if (element && !sameType) {
-            newFiber = {
-                type: element.type,
-                props: element.props,
-                native: undefined,
-                parent: current,
-                previous: undefined,
-                hooks: typeof element.type === 'function' ? [] : undefined,
-                change: types_Change.Add
-            };
-        }
-        if (previous && !sameType) {
-            previous.change = types_Change.Delete;
-            context.deletions.push(previous);
+        if (previous && !isSameType) {
+            deleteChildren(context, previous);
         }
         const item = previous;
         if (previous) {
@@ -628,6 +603,37 @@ function reconcileChildren(context, current) {
     }
     if (maxTries === 0) {
         log('Ran out of tries at reconcileChildren.', 'warning');
+    }
+}
+const createUpdatedFiber = (current, previous, element)=>({
+        type: previous.type,
+        props: (element === null || element === void 0 ? void 0 : element.props) ?? (previous === null || previous === void 0 ? void 0 : previous.props),
+        native: previous.native,
+        parent: current,
+        previous,
+        hooks: previous.hooks,
+        change: types_Change.Update
+    });
+const createNewFiber = (current, element, previous)=>({
+        type: element.type,
+        props: element.props,
+        native: undefined,
+        parent: current,
+        previous: undefined,
+        hooks: typeof element.type === 'function' ? previous ? previous.hooks : [] : undefined,
+        change: types_Change.Add
+    });
+function deleteChildren(context, fiber) {
+    if (fiber.change === types_Change.Delete) {
+        return;
+    }
+    fiber.change = types_Change.Delete;
+    context.deletions.push(fiber);
+    if (fiber.child) {
+        deleteChildren(context, fiber.child);
+    }
+    if (fiber.sibling) {
+        deleteChildren(context, fiber.sibling);
     }
 }
 function rerender(context, fiber) {
