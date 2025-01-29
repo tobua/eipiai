@@ -17,7 +17,6 @@ const methods = {
   routeError: route(z.object({ id: z.number() }))(({ context: { uid }, error }, { id }) => {
     error(`Custom error ${id} with ${uid}.`)
   }),
-  // biome-ignore lint/suspicious/noEmptyBlockStatements: For testing purposes.
   emptyReturn: route()(() => {}),
 }
 

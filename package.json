@@ -6,7 +6,7 @@
   "license": "MIT",
   "author": "Matthias Giger",
   "scripts": {
-    "check": "biome check --write .",
+    "check": "biome check --write . && biome check --write --config-path=test ./test/*",
     "types": "tsc && tsc --project ./test/tsconfig.json"
   },
   "dependencies": {
@@ -53,26 +53,33 @@
     "gitignore": "recommended",
     "vscode": "biome",
     "license": "MIT",
-    "biome": {
-      "extends": "recommended",
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noNodejsModules": "off"
-          },
-          "suspicious": {
-            "noConsoleLog": "off",
-            "noConsole": "off",
-            "noExplicitAny": "off"
+    "biome": [
+      {
+        "extends": "recommended",
+        "linter": {
+          "rules": {
+            "correctness": {
+              "noNodejsModules": "off"
+            },
+            "suspicious": {
+              "noConsoleLog": "off",
+              "noConsole": "off",
+              "noExplicitAny": "off"
+            }
           }
+        },
+        "files": {
+          "ignore": [
+            "demo",
+            "test"
+          ]
         }
       },
-      "files": {
-        "ignore": [
-          "demo"
-        ]
+      {
+        "folder": "test",
+        "extends": "test"
       }
-    },
+    ],
     "typescript": [
       {
         "extends": "plugin",

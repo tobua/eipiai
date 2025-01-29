@@ -1,20 +1,9 @@
-import { type SafeParseReturnType, type ZodIssue, type ZodTypeAny, z as zod } from 'zod'
-import type { Body, Handler, JsonSerializable, Methods, ServerResponse, Subscription } from './types'
+import { type ZodIssue, type ZodTypeAny, z as zod } from 'zod'
+import type { Body, JsonSerializable, MappedMethods, Methods, ServerResponse, SubscriptionHandler } from './types'
 
-type MappedMethods<T extends Methods> = {
-  [K in keyof T]: T[K] extends Handler
-    ? (...args: Parameters<T[K]>) => Promise<{
-        error: boolean | string
-        data: Awaited<ReturnType<T[K]>>
-        validation?: SafeParseReturnType<any, any>
-        subscribe?: (callback: (data: any) => void) => void
-      }>
-    : T[K] extends Subscription
-      ? (callback: (data: T[K][0][0]) => void, ...filter: T[K][1]) => Promise<void>
-      : never
-}
+export const z = zod
 
-const subscribers: Record<string, ((...data: any[]) => void)[]> = {}
+const subscribers: Record<string, SubscriptionHandler[]> = {}
 
 export function api<T extends Methods>(methods: T): MappedMethods<T> {
   return methods as unknown as MappedMethods<T>
@@ -73,10 +62,11 @@ function sendSocketMessage(
   return id
 }
 
-function addSubscriber(route: string, callback: (data: any) => void) {
+function addSubscriber(route: string, id: number, callback: SubscriptionHandler) {
   if (!subscribers[route]) {
     subscribers[route] = []
   }
+  callback.id = id
   subscribers[route]?.push(callback)
 }
 
@@ -100,7 +90,7 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
           const id = sendSocketMessage(socket, route, args, isSubscription, options)
 
           if (isSubscription) {
-            addSubscriber(route, args[0] as unknown as (data: any) => void)
+            addSubscriber(route, id, args[0] as unknown as SubscriptionHandler)
           }
 
           return new Promise((innerDone) => {
@@ -119,23 +109,34 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data as string) // Fails with some dependencies without cast.
-      const { subscribed, subscribe, route, error, data: responseData, id, validation } = data as ServerResponse
+      const { subscribed, subscribe, unsubscribe, route, error, data: responseData, id, validation } = data as ServerResponse
 
-      if (handleSubscriptionConfirmation(id, subscribed)) {
+      if (handleSubscriptionConfirmation(id, route, subscribed)) {
         return
       }
-      if (handleSubscriptionNotification(subscribe, route, error, responseData, validation)) {
+      if (handleSubscriptionNotification(subscribe, route, id, error, responseData, validation)) {
+        return
+      }
+      if (handleUnsubscribe(id, unsubscribe)) {
         return
       }
 
       handleMessageResponse(data)
     }
 
-    function handleSubscriptionConfirmation(id: number, subscribed?: boolean) {
+    function handleSubscriptionConfirmation(id: number, route: string, subscribed?: boolean) {
       if (subscribed && openHandlers.has(id)) {
         const handler = openHandlers.get(id)
         if (handler) {
-          handler({ error: false })
+          handler({
+            error: false,
+            unsubscribe: () => {
+              socket.send(JSON.stringify({ id, unsubscribe: true, method: route, context: {}, subscription: false } as Body))
+              return new Promise((innerDone) => {
+                openHandlers.set(id, innerDone)
+              })
+            },
+          })
           openHandlers.delete(id)
         }
         return true
@@ -146,6 +147,7 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
     function handleSubscriptionNotification(
       subscribe: boolean,
       route: string,
+      id: number,
       error: boolean,
       responseData: any[],
       validation?: ZodIssue[],
@@ -155,15 +157,29 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
         console.log(validation) // TODO pretty print validation messages.
       }
       if (subscribe && subscribers[route]) {
-        notifySubscribers(route, responseData)
+        notifySubscribers(route, id, responseData)
         return true
       }
       return false
     }
 
-    function notifySubscribers(route: string, responseData: any[]) {
+    function handleUnsubscribe(id: number, unsubscribe = false) {
+      if (unsubscribe && openHandlers.has(id)) {
+        const handler = openHandlers.get(id)
+        if (handler) {
+          handler({ error: false })
+          openHandlers.delete(id)
+        }
+        return true
+      }
+      return false
+    }
+
+    function notifySubscribers(route: string, id: number, responseData: any[]) {
       for (const subscriber of subscribers[route] ?? []) {
-        subscriber(responseData.length === 1 ? responseData[0] : responseData)
+        if (id === subscriber.id) {
+          subscriber(responseData.length === 1 ? responseData[0] : responseData)
+        }
       }
     }
 
@@ -188,8 +204,6 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
     }
   })
 }
-
-export const z = zod
 
 export function route<T extends ZodTypeAny[]>(...inputs: T) {
   return (

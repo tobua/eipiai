@@ -1,7 +1,7 @@
 import { type Elysia, t } from 'elysia'
 import type { z } from 'zod'
 import { executeHandler, validateInputs } from './server'
-import type { Body, Handler, Methods, ServerResponse } from './types'
+import type { Body, Handler, Methods, ServerResponse, SubscriptionHandler } from './types'
 
 async function runRoute(body: Body, routes: Methods, ws: any) {
   const [handler, inputs] = routes[body.method] as unknown as [Handler, z.ZodTypeAny]
@@ -31,21 +31,39 @@ async function runRoute(body: Body, routes: Methods, ws: any) {
   ws.send({ error, data, route: body.method, id: body.id } as ServerResponse)
 }
 
-function registerSubscription(message: Body, routes: Methods, ws: any) {
-  return (...data: any[]) => {
-    if (routes[message.method] && typeof routes[message.method][0] === 'function' && !routes[message.method][0](message.data)) {
-      return
+// Server will only send messages to subscriptions that have been previously registered by the client.
+const subscriptions: { [K in string]?: SubscriptionHandler[] } = {}
+
+export function callSubscription(method: string, ...data: any) {
+  if (subscriptions[method]) {
+    for (const subscriber of subscriptions[method]) {
+      subscriber(...data)
     }
-    ws.send({ error: false, data, route: message.method, subscribe: true, id: message.id } as ServerResponse) // TODO is sending subscribe true.
   }
 }
 
-// Server will only send messages to subscriptions that have been previously registered by the client.
-const subscriptions: { [K in string]?: ReturnType<typeof registerSubscription> } = {}
+function registerSubscription(message: Body, routes: Methods, ws: any) {
+  const { method, data, id } = message
+  if (!subscriptions[method]) {
+    subscriptions[method] = []
+  }
+  const handler = (...args: any[]) => {
+    if (routes[method] && typeof routes[method][0] === 'function' && !routes[method][0](data)) {
+      return
+    }
+    ws.send({ error: false, data: args, route: method, subscribe: true, id: id } as ServerResponse) // TODO is sending subscribe true.
+  }
+  handler.id = id
+  subscriptions[method].push(handler)
+}
 
-export function callSubscription(method: string, data: any) {
-  if (subscriptions[method]) {
-    subscriptions[method](data)
+function removeSubscription(message: Body) {
+  if (subscriptions[message.method]) {
+    for (const subscriber of subscriptions[message.method]) {
+      if (subscriber.id === message.id) {
+        subscriptions[message.method] = subscriptions[message.method]?.filter((subscriber) => subscriber.id !== message.id) || []
+      }
+    }
   }
 }
 
@@ -62,6 +80,7 @@ export function socket(routes: Methods, options?: { path?: string }) {
         context: t.Any(),
         update: t.Optional(t.Boolean()), // TODO unused?
         subscription: t.Boolean(),
+        unsubscribe: t.Optional(t.Boolean()),
         id: t.Number(),
       }),
       query: t.Object({}),
@@ -71,8 +90,13 @@ export function socket(routes: Methods, options?: { path?: string }) {
         }
 
         if (message.subscription) {
-          subscriptions[message.method] = registerSubscription(message, routes, ws)
-          return ws.send({ error: false, subscribed: true, id: message.id } as ServerResponse)
+          registerSubscription(message, routes, ws)
+          return ws.send({ error: false, subscribed: true, route: message.method, id: message.id } as ServerResponse)
+        }
+
+        if (message.unsubscribe) {
+          removeSubscription(message)
+          return ws.send({ error: false, unsubscribe: true, id: message.id } as ServerResponse)
         }
 
         runRoute(message, routes, ws)
@@ -83,4 +107,10 @@ export function socket(routes: Methods, options?: { path?: string }) {
   }
 
   return { inject, subscriptions }
+}
+
+export function reset() {
+  for (const key in subscriptions) {
+    delete subscriptions[key]
+  }
 }

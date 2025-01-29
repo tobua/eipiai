@@ -8,14 +8,14 @@
   },
   "dependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@elysiajs/cors": "^1.1.1",
-    "@rsbuild/core": "^1.0.17",
-    "@rsbuild/plugin-react": "^1.0.5",
-    "elysia": "^1.1.23",
-    "epic-jsx": "^0.9.3",
-    "epic-state": "^0.12.0",
-    "typescript": "^5.6.3",
-    "zero-configuration": "^0.17.5"
+    "@elysiajs/cors": "^1.2.0",
+    "@rsbuild/core": "^1.2.3",
+    "@rsbuild/plugin-react": "^1.1.0",
+    "elysia": "^1.2.10",
+    "epic-jsx": "^0.9.10",
+    "epic-state": "^0.15.1",
+    "typescript": "^5.7.3",
+    "zero-configuration": "^0.18.0"
   },
   "trustedDependencies": [
     "zero-configuration"

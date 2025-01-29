@@ -1,5 +1,6 @@
 import { expect, mock, test } from 'bun:test'
 import { api, route, socketClient, subscribe, z } from '../index'
+import { callSubscription, reset } from '../socket'
 import { startWebsocketServer } from './server'
 
 const methods = {
@@ -35,10 +36,8 @@ test('Initializes client and subscribes to various routes.', async () => {
 
   const data = { text: 'Newly added post.' }
 
-  if (subscriptions.subscribePosts) {
-    subscriptions.subscribePosts(data)
-    await wait()
-  }
+  callSubscription('subscribePosts', data)
+  await wait()
 
   expect(subscribePostsMock).toHaveBeenCalled()
   expect(subscribePostsMock.mock.calls[0][0]).toEqual(data)
@@ -50,17 +49,13 @@ test('Initializes client and subscribes to various routes.', async () => {
   await wait()
   expect(subscriptions.subscribePost).toBeDefined()
 
-  if (subscriptions.subscribePost) {
-    subscriptions.subscribePost(5)
-    await wait()
-  }
+  callSubscription('subscribePost', 5)
+  await wait()
 
   expect(subscribePostMock.mock.calls[0][0]).toBe(5)
 
-  if (subscriptions.subscribePost) {
-    subscriptions.subscribePost(10)
-    await wait()
-  }
+  callSubscription('subscribePost', 10)
+  await wait()
 
   expect(subscribePostMock.mock.calls[1][0]).toBe(10)
 
@@ -69,11 +64,9 @@ test('Initializes client and subscribes to various routes.', async () => {
 
   expect(subscriptions.subscribePost).toBeDefined()
 
-  if (subscriptions.subscribePost) {
-    subscriptions.subscribePost(5)
-    subscriptions.subscribePost(10)
-    await wait()
-  }
+  callSubscription('subscribePost', 5)
+  callSubscription('subscribePost', 10)
+  await wait()
 
   expect(subscribePostFilteredMock.mock.calls.length).toBe(0)
 
@@ -82,12 +75,36 @@ test('Initializes client and subscribes to various routes.', async () => {
 
   await wait()
 
-  if (subscriptions.subscribeMultiplePost) {
-    subscriptions.subscribeMultiplePost(1, '1')
-    await wait()
-  }
+  callSubscription('subscribeMultiplePost', 1, '1')
+  await wait()
 
   expect(subscribeMultiplePostMock.mock.calls[0][0]).toEqual([1, '1'])
+
+  close()
+})
+
+test('Can unsubscribe from previous subscription.', async () => {
+  reset()
+  const { client, close } = await socketClient<typeof routes>({ url, context: { uid: '123' } })
+
+  const firstSubscribePostsMock = mock()
+  const secondSubscribePostsMock = mock()
+  const { unsubscribe } = await client.subscribePosts(firstSubscribePostsMock)
+  await client.subscribePosts(secondSubscribePostsMock)
+
+  callSubscription('subscribePosts', { hello: 'world' })
+  await wait()
+
+  expect(firstSubscribePostsMock).toHaveBeenCalledTimes(1)
+  expect(secondSubscribePostsMock).toHaveBeenCalledTimes(1)
+
+  await unsubscribe()
+
+  callSubscription('subscribePosts', { hello: 'again' })
+  await wait()
+
+  expect(firstSubscribePostsMock).toHaveBeenCalledTimes(1)
+  expect(secondSubscribePostsMock).toHaveBeenCalledTimes(2)
 
   close()
 })
