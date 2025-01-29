@@ -230,6 +230,77 @@ function debounce(method, wait) {
         timeout = setTimeout(()=>method.apply(this, args), wait);
     };
 }
+const svgAndRegularTags = [
+    'a',
+    'canvas',
+    'audio',
+    'iframe',
+    'video'
+];
+function camelCaseToDashCase(camelCase) {
+    return camelCase.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+// Browser requires dash-case to render, react allows camelCase.
+function convertSvgPropsToDashCase(props) {
+    for(const prop in props){
+        if (svgProperties.includes(prop)) {
+            props[camelCaseToDashCase(prop)] = props[prop];
+            delete props[prop];
+        }
+    }
+    return props;
+}
+const svgProperties = [
+    'accentHeight',
+    'alignmentBaseline',
+    'arabicForm',
+    'baselineShift',
+    'clipPath',
+    'clipRule',
+    'colorInterpolation',
+    'colorInterpolationFilters',
+    'colorProfile',
+    'colorRendering',
+    'dominantBaseline',
+    'enableBackground',
+    'fillOpacity',
+    'fillRule',
+    'floodColor',
+    'floodOpacity',
+    'fontFamily',
+    'fontSize',
+    'fontSizeAdjust',
+    'fontStretch',
+    'fontStyle',
+    'fontVariant',
+    'fontWeight',
+    'glyphOrientationHorizontal',
+    'glyphOrientationVertical',
+    'imageRendering',
+    'letterSpacing',
+    'lightingColor',
+    'markerEnd',
+    'markerMid',
+    'markerStart',
+    'paintOrder',
+    'pointerEvents',
+    'shapeRendering',
+    'stopColor',
+    'stopOpacity',
+    'strokeDasharray',
+    'strokeDashoffset',
+    'strokeLinecap',
+    'strokeLinejoin',
+    'strokeMiterlimit',
+    'strokeOpacity',
+    'strokeWidth',
+    'textAnchor',
+    'textDecoration',
+    'textRendering',
+    'unicodeBidi',
+    'wordSpacing',
+    'writingMode'
+];
 
 ;// CONCATENATED MODULE: ./node_modules/svg-tag-names/index.js
 /**
@@ -346,13 +417,6 @@ var types_Change = /*#__PURE__*/ function(Change) {
 
 
 
-const svgAndRegularTags = [
-    'a',
-    'canvas',
-    'audio',
-    'iframe',
-    'video'
-];
 // TODO this is a workaround, better to pass SVG context down the fiber tree as soon as an SVG tag is encountered.
 const isSvgTag = (tag)=>{
     if (!svgTagNames.includes(tag)) {
@@ -463,6 +527,7 @@ function createNativeElement(fiber) {
     if (fiber.type === 'TEXT_ELEMENT') {
         element = document.createTextNode('');
     } else if (isSvgTag(fiber.type)) {
+        convertSvgPropsToDashCase(fiber.props);
         // Necessary to properly render SVG elements, createElement will not work.
         element = document.createElementNS('http://www.w3.org/2000/svg', fiber.type);
     } else {
@@ -937,7 +1002,7 @@ __webpack_require__.d(__webpack_exports__, {
   J1: () => (listGetters),
   Kb: () => (createBaseObject),
   Kn: () => (isObject),
-  ZN: () => (updateProxyValues),
+  Ph: () => (updateProxyValues),
   cM: () => (log),
   fm: () => (newProxy),
   n4: () => (isSetter),
@@ -1006,6 +1071,16 @@ function updateProxyValues(existingObject, newObject) {
         }
     }
 }
+function set(parent, property) {
+    return (value)=>{
+        parent[property] = value;
+    };
+}
+function toggle(parent, property) {
+    return ()=>{
+        parent[property] = !parent[property];
+    };
+}
 
 
 }),
@@ -1017,8 +1092,10 @@ __webpack_require__.d(__webpack_exports__, {
   SB: () => (/* binding */ epic_state_state)
 });
 
-// UNUSED EXPORTS: removeAllPlugins, list, ref, run, batch, observe, remove, plugin
+// UNUSED EXPORTS: removeAllPlugins, list, ref, run, batch, observe, remove, set, plugin, load, toggle
 
+// EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 5 modules
+var epic_jsx = __webpack_require__(545);
 // EXTERNAL MODULE: ./node_modules/epic-state/helper.ts
 var helper = __webpack_require__(164);
 // EXTERNAL MODULE: ./node_modules/epic-state/plugin.ts
@@ -1057,8 +1134,7 @@ function schedule(callback) {
     // requestIdleCallback polyfill (not supported in Safari)
     // https://github.com/pladaria/requestidlecallback-polyfill
     // See react scheduler for better implementation.
-    window.requestIdleCallback = window.requestIdleCallback || function idleCallbackPolyfill(innerCallback, // biome-ignore lint/correctness/noUnusedVariables: Default API, might be needed.
-    options) {
+    window.requestIdleCallback = window.requestIdleCallback || function idleCallbackPolyfill(innerCallback, _options) {
         const start = Date.now();
         setTimeout(()=>{
             innerCallback({
@@ -1082,7 +1158,7 @@ function process(deadline) {
     }
     let shouldYield = false;
     let maxTries = 500;
-    while(batching.updates.length && !shouldYield && maxTries > 0){
+    while(batching.updates.length > 0 && !shouldYield && maxTries > 0){
         maxTries -= 1;
         const update = batching.updates.shift();
         if (update) {
@@ -1094,10 +1170,10 @@ function process(deadline) {
         shouldYield = deadline.timeRemaining() < 1;
     }
     if (maxTries === 0) {
-        console.error('Ran out of tries at process.');
+        (0,helper/* log */.cM)('Ran out of tries at process.', 'warning');
     }
     // Continuing to process in next iteration.
-    if (batching.updates.length) {
+    if (batching.updates.length > 0) {
         schedule(process);
     }
     batching.scheduler = undefined;
@@ -1309,7 +1385,7 @@ const isTracked = (parent, property)=>{
 };
 function derive(proxy) {
     const getters = (0,helper/* listGetters */.J1)(proxy);
-    if (!Object.keys(getters).length) {
+    if (Object.keys(getters).length === 0) {
         return proxy;
     }
     for (const [key, getter] of Object.entries(getters)){
@@ -1340,6 +1416,8 @@ function derive(proxy) {
 // EXTERNAL MODULE: ./node_modules/epic-state/types.ts + 1 modules
 var types = __webpack_require__(266);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/index.ts
+ // TODO import should be optional and not required, pass along with connect.
+
 
 
 
@@ -1353,10 +1431,15 @@ var types = __webpack_require__(266);
 // Shared State, Map with links to all states created.
 const proxyStateMap = new Map();
 const refSet = new WeakSet();
+const renderStateMap = new Map();
 // proxy function renamed to state (proxy as hidden implementation detail).
 // @ts-ignore TODO figure out if object will work as expected
 function epic_state_state() {
     let initialObject = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {}, parent = arguments.length > 1 ? arguments[1] : void 0, root = arguments.length > 2 ? arguments[2] : void 0;
+    var _Renderer_current, _Renderer_current1;
+    if (((_Renderer_current = epic_jsx/* Renderer,current */.Th.current) === null || _Renderer_current === void 0 ? void 0 : _Renderer_current.id) && renderStateMap.has(epic_jsx/* Renderer,current,id */.Th.current.id)) {
+        return renderStateMap.get(epic_jsx/* Renderer,current,id */.Th.current.id);
+    }
     let initialization = true;
     if (!(0,helper/* isObject */.Kn)(initialObject)) {
         (0,helper/* log */.cM)('Only objects can be made observable with state()', 'error');
@@ -1459,7 +1542,7 @@ function epic_state_state() {
             }
             // Call setters and getters on existing proxy.
             if (!initialization && typeof value === 'object' && typeof previousValue === 'object' && !Array.isArray(value)) {
-                (0,helper/* updateProxyValues */.ZN)(previousValue, value);
+                (0,helper/* updateProxyValues */.Ph)(previousValue, value);
                 return true;
             }
             if (previousValue === undefined && !(0,helper/* isSetter */.n4)(target, property)) {
@@ -1510,6 +1593,9 @@ function epic_state_state() {
         baseObject
     ];
     proxyStateMap.set(proxyObject, proxyState);
+    if ((_Renderer_current1 = epic_jsx/* Renderer,current */.Th.current) === null || _Renderer_current1 === void 0 ? void 0 : _Renderer_current1.id) {
+        renderStateMap.set(epic_jsx/* Renderer,current,id */.Th.current.id, proxyObject);
+    }
     for (const key of Reflect.ownKeys(initialObject)){
         const desc = Object.getOwnPropertyDescriptor(initialObject, key);
         if ('value' in desc) {

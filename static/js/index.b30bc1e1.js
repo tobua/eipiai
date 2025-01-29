@@ -15,6 +15,7 @@ var epic_state = __webpack_require__(220);
 var plugin_epic_jsx = __webpack_require__(841);
 ;// CONCATENATED MODULE: ../index.ts
 
+const z = (/* unused pure expression or super */ null && (zod));
 const subscribers = (/* unused pure expression or super */ null && ({}));
 function api(methods) {
     return methods;
@@ -62,11 +63,12 @@ function sendSocketMessage(socket, route, args, isSubscription, options) {
     }));
     return id;
 }
-function addSubscriber(route, callback) {
+function addSubscriber(route, id, callback) {
     var _subscribers_route;
     if (!subscribers[route]) {
         subscribers[route] = [];
     }
+    callback.id = id;
     (_subscribers_route = subscribers[route]) === null || _subscribers_route === void 0 ? void 0 : _subscribers_route.push(callback);
 }
 const isSocketClosed = (socket)=>socket.readyState === socket.CLOSED || socket.readyState === socket.CLOSING;
@@ -87,7 +89,7 @@ function socketClient(options) {
                     const isSubscription = checkIfSubscription(args);
                     const id = sendSocketMessage(socket, route, args, isSubscription, options);
                     if (isSubscription) {
-                        addSubscriber(route, args[0]);
+                        addSubscriber(route, id, args[0]);
                     }
                     return new Promise((innerDone)=>{
                         openHandlers.set(id, innerDone);
@@ -107,17 +109,58 @@ function socketClient(options) {
         socket.onmessage = (event)=>{
             const data = JSON.parse(event.data) // Fails with some dependencies without cast.
             ;
-            const { subscribed, subscribe, route, error, data: responseData, id, validation } = data;
-            if (handleSubscriptionConfirmation(id, subscribed)) {
+            const { subscribed, subscribe, unsubscribe, route, error, data: responseData, id, validation } = data;
+            if (handleSubscriptionConfirmation(id, route, subscribed)) {
                 return;
             }
-            if (handleSubscriptionNotification(subscribe, route, error, responseData, validation)) {
+            if (handleSubscriptionNotification(subscribe, route, id, error, responseData, validation)) {
+                return;
+            }
+            if (handleUnsubscribe(id, unsubscribe)) {
                 return;
             }
             handleMessageResponse(data);
         };
-        function handleSubscriptionConfirmation(id, subscribed) {
+        function handleSubscriptionConfirmation(id, route, subscribed) {
             if (subscribed && openHandlers.has(id)) {
+                const handler = openHandlers.get(id);
+                if (handler) {
+                    handler({
+                        error: false,
+                        unsubscribe: ()=>{
+                            socket.send(JSON.stringify({
+                                id,
+                                unsubscribe: true,
+                                method: route,
+                                context: {},
+                                subscription: false
+                            }));
+                            return new Promise((innerDone)=>{
+                                openHandlers.set(id, innerDone);
+                            });
+                        }
+                    });
+                    openHandlers.delete(id);
+                }
+                return true;
+            }
+            return false;
+        }
+        function handleSubscriptionNotification(subscribe, route, id, error, responseData, validation) {
+            if (error) {
+                console.log(`Erroneous subscription response received for ${route}.`);
+                console.log(validation) // TODO pretty print validation messages.
+                ;
+            }
+            if (subscribe && subscribers[route]) {
+                notifySubscribers(route, id, responseData);
+                return true;
+            }
+            return false;
+        }
+        function handleUnsubscribe(id) {
+            let unsubscribe = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : false;
+            if (unsubscribe && openHandlers.has(id)) {
                 const handler = openHandlers.get(id);
                 if (handler) {
                     handler({
@@ -129,21 +172,11 @@ function socketClient(options) {
             }
             return false;
         }
-        function handleSubscriptionNotification(subscribe, route, error, responseData, validation) {
-            if (error) {
-                console.log(`Erroneous subscription response received for ${route}.`);
-                console.log(validation) // TODO pretty print validation messages.
-                ;
-            }
-            if (subscribe && subscribers[route]) {
-                notifySubscribers(route, responseData);
-                return true;
-            }
-            return false;
-        }
-        function notifySubscribers(route, responseData) {
+        function notifySubscribers(route, id, responseData) {
             for (const subscriber of subscribers[route] ?? []){
-                subscriber(responseData.length === 1 ? responseData[0] : responseData);
+                if (id === subscriber.id) {
+                    subscriber(responseData.length === 1 ? responseData[0] : responseData);
+                }
             }
         }
         function handleMessageResponse(data) {
@@ -175,7 +208,6 @@ function socketClient(options) {
         };
     });
 }
-const z = (/* unused pure expression or super */ null && (zod));
 function index_route() {
     for(var _len = arguments.length, inputs = new Array(_len), _key = 0; _key < _len; _key++){
         inputs[_key] = arguments[_key];
