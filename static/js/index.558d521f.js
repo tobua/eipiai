@@ -5,8 +5,8 @@ var __webpack_modules__ = ({
 
 // EXTERNAL MODULE: ./node_modules/epic-jsx/jsx.ts
 var jsx = __webpack_require__(129);
-// EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 5 modules
-var epic_jsx = __webpack_require__(545);
+// EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 4 modules
+var epic_jsx = __webpack_require__(905);
 // EXTERNAL MODULE: ./node_modules/epic-state/plugin.ts
 var epic_state_plugin = __webpack_require__(93);
 // EXTERNAL MODULE: ./node_modules/epic-state/index.ts + 3 modules
@@ -147,16 +147,22 @@ function socketClient(options) {
             return false;
         }
         function handleSubscriptionNotification(subscribe, route, id, error, responseData, validation) {
+            if (!subscribe) {
+                return false;
+            }
+            // Subscriptions can't technically be erroneous, validation errors however will be shown here.
             if (error) {
                 console.log(`Erroneous subscription response received for ${route}.`);
-                console.log(validation) // TODO pretty print validation messages.
-                ;
+                if (validation) {
+                    console.log(validation) // TODO pretty print validation messages.
+                    ;
+                }
+                return true;
             }
-            if (subscribe && subscribers[route]) {
+            if (!error && subscribers[route]) {
                 notifySubscribers(route, id, responseData);
                 return true;
             }
-            return false;
         }
         function handleUnsubscribe(id) {
             let unsubscribe = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : false;

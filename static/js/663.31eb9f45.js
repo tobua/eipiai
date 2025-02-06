@@ -106,7 +106,7 @@ module.exports = debounce;
 
 
 }),
-545: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+905: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
@@ -230,13 +230,6 @@ function debounce(method, wait) {
         timeout = setTimeout(()=>method.apply(this, args), wait);
     };
 }
-const svgAndRegularTags = [
-    'a',
-    'canvas',
-    'audio',
-    'iframe',
-    'video'
-];
 function camelCaseToDashCase(camelCase) {
     return camelCase.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
@@ -302,109 +295,6 @@ const svgProperties = [
     'writingMode'
 ];
 
-;// CONCATENATED MODULE: ./node_modules/svg-tag-names/index.js
-/**
- * List of known SVG tag names.
- *
- * @type {Array<string>}
- */
-const svgTagNames = [
-  'a',
-  'altGlyph',
-  'altGlyphDef',
-  'altGlyphItem',
-  'animate',
-  'animateColor',
-  'animateMotion',
-  'animateTransform',
-  'animation',
-  'audio',
-  'canvas',
-  'circle',
-  'clipPath',
-  'color-profile',
-  'cursor',
-  'defs',
-  'desc',
-  'discard',
-  'ellipse',
-  'feBlend',
-  'feColorMatrix',
-  'feComponentTransfer',
-  'feComposite',
-  'feConvolveMatrix',
-  'feDiffuseLighting',
-  'feDisplacementMap',
-  'feDistantLight',
-  'feDropShadow',
-  'feFlood',
-  'feFuncA',
-  'feFuncB',
-  'feFuncG',
-  'feFuncR',
-  'feGaussianBlur',
-  'feImage',
-  'feMerge',
-  'feMergeNode',
-  'feMorphology',
-  'feOffset',
-  'fePointLight',
-  'feSpecularLighting',
-  'feSpotLight',
-  'feTile',
-  'feTurbulence',
-  'filter',
-  'font',
-  'font-face',
-  'font-face-format',
-  'font-face-name',
-  'font-face-src',
-  'font-face-uri',
-  'foreignObject',
-  'g',
-  'glyph',
-  'glyphRef',
-  'handler',
-  'hkern',
-  'iframe',
-  'image',
-  'line',
-  'linearGradient',
-  'listener',
-  'marker',
-  'mask',
-  'metadata',
-  'missing-glyph',
-  'mpath',
-  'path',
-  'pattern',
-  'polygon',
-  'polyline',
-  'prefetch',
-  'radialGradient',
-  'rect',
-  'script',
-  'set',
-  'solidColor',
-  'stop',
-  'style',
-  'svg',
-  'switch',
-  'symbol',
-  'tbreak',
-  'text',
-  'textArea',
-  'textPath',
-  'title',
-  'tref',
-  'tspan',
-  'unknown',
-  'use',
-  'video',
-  'view',
-  'vkern'
-]
-
 ;// CONCATENATED MODULE: ./node_modules/epic-jsx/types.ts
 var types_Change = /*#__PURE__*/ function(Change) {
     Change[Change["Update"] = 0] = "Update";
@@ -416,20 +306,13 @@ var types_Change = /*#__PURE__*/ function(Change) {
 ;// CONCATENATED MODULE: ./node_modules/epic-jsx/browser.ts
 
 
-
-// TODO this is a workaround, better to pass SVG context down the fiber tree as soon as an SVG tag is encountered.
-const isSvgTag = (tag)=>{
-    if (!svgTagNames.includes(tag)) {
-        return false;
-    }
-    if (svgAndRegularTags.includes(tag)) {
-        return false;
-    }
-    return true;
-};
 const sizeStyleProperties = [
     'width',
     'height',
+    'minWidth',
+    'maxWidth',
+    'minHeight',
+    'maxHeight',
     'border',
     'margin',
     'padding',
@@ -462,13 +345,20 @@ const isEvent = (key)=>key.startsWith('on');
 const isProperty = (key)=>key !== 'children' && !isEvent(key);
 const isNew = (prev, next)=>(key)=>prev[key] !== next[key];
 const isGone = (_, next)=>(key)=>!(key in next);
+// Listeners on new props might not have reference equality, so they need to be stored on assignment.
+const eventListeners = new Map();
 function updateNativeElement(element) {
     let prevProps = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {}, nextProps = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : {};
     // Remove old or changed event listeners
     // biome-ignore lint/complexity/noForEach: Chained expression.
     Object.keys(prevProps).filter(isEvent).filter((key)=>!(key in nextProps) || isNew(prevProps, nextProps)(key)).forEach((name)=>{
-        const eventType = name.toLowerCase().substring(2);
-        element.removeEventListener(eventType, prevProps[name]);
+        var _eventListeners_get;
+        const eventType = name.toLowerCase().substring(2) // Remove the "on" from onClick.
+        ;
+        const previousHandler = (_eventListeners_get = eventListeners.get(element)) === null || _eventListeners_get === void 0 ? void 0 : _eventListeners_get.get(eventType);
+        if (previousHandler) {
+            element.removeEventListener(eventType, previousHandler);
+        }
     });
     // Remove old properties
     // biome-ignore lint/complexity/noForEach: Chained expression.
@@ -503,8 +393,13 @@ function updateNativeElement(element) {
     // Add event listeners
     // biome-ignore lint/complexity/noForEach: Chained expression.
     Object.keys(nextProps).filter(isEvent).filter(isNew(prevProps, nextProps)).forEach((name)=>{
+        var _eventListeners_get;
         const eventType = name.toLowerCase().substring(2);
         element.addEventListener(eventType, nextProps[name]);
+        if (!eventListeners.has(element)) {
+            eventListeners.set(element, new Map());
+        }
+        (_eventListeners_get = eventListeners.get(element)) === null || _eventListeners_get === void 0 ? void 0 : _eventListeners_get.set(eventType, nextProps[name]);
     });
 }
 function mapLegacyProps(fiber) {
@@ -526,7 +421,7 @@ function createNativeElement(fiber) {
     let element;
     if (fiber.type === 'TEXT_ELEMENT') {
         element = document.createTextNode('');
-    } else if (isSvgTag(fiber.type)) {
+    } else if (fiber.svg) {
         convertSvgPropsToDashCase(fiber.props);
         // Necessary to properly render SVG elements, createElement will not work.
         element = document.createElementNS('http://www.w3.org/2000/svg', fiber.type);
@@ -572,6 +467,10 @@ function commitFiber(fiber) {
         var _fiber_previous;
         updateNativeElement(fiber.native, (_fiber_previous = fiber.previous) === null || _fiber_previous === void 0 ? void 0 : _fiber_previous.props, fiber.props);
     } else if (fiber.change === types_Change.Delete && parent) {
+        if (fiber.native && eventListeners.has(fiber.native)) {
+            eventListeners.delete(fiber.native) // Clean up event listener tracking.
+            ;
+        }
         if (parent.native) {
             commitDeletion(fiber, parent.native);
         }
@@ -672,11 +571,12 @@ function reconcileChildren(context, current) {
 }
 const createUpdatedFiber = (current, previous, element)=>({
         type: previous.type,
-        props: (element === null || element === void 0 ? void 0 : element.props) ?? (previous === null || previous === void 0 ? void 0 : previous.props),
+        props: element === null || element === void 0 ? void 0 : element.props,
         native: previous.native,
         parent: current,
         previous,
         hooks: previous.hooks,
+        svg: previous.svg || previous.type === 'svg',
         change: types_Change.Update
     });
 const createNewFiber = (current, element, previous)=>({
@@ -686,6 +586,7 @@ const createNewFiber = (current, element, previous)=>({
         parent: current,
         previous: undefined,
         hooks: typeof element.type === 'function' ? previous ? previous.hooks : [] : undefined,
+        svg: current.svg || element.type === 'svg',
         change: types_Change.Add
     });
 function deleteChildren(context, fiber) {
@@ -703,11 +604,9 @@ function deleteChildren(context, fiber) {
 }
 function rerender(context, fiber) {
     context.pending.push({
-        native: fiber.native,
-        props: fiber.props,
-        type: fiber.type,
-        previous: fiber,
-        parent: fiber.parent
+        ...fiber,
+        sibling: undefined,
+        previous: fiber
     });
 }
 function updateFunctionComponent(context, fiber) {
@@ -746,6 +645,10 @@ function updateFunctionComponent(context, fiber) {
         }
     };
     Renderer.current = fiber;
+    if (Array.isArray(fiber.props.children) && fiber.props.children.length === 0) {
+        // biome-ignore lint/performance/noDelete: Clean up meaningless props.
+        delete fiber.props.children;
+    }
     const children = [
         fiber.type.call(fiber.component, fiber.props)
     ];
@@ -880,19 +783,11 @@ const unmount = (container)=>{
         log('Trying to unmount empty container', 'warning');
         return;
     }
-    while(container.firstChild){
-        container.removeChild(container.firstChild);
-    }
+    container.innerHTML = '';
     const context = getRoot(container);
     if (!context) {
         return;
     }
-    context.root = undefined;
-    context.deletions = [];
-    context.current = undefined;
-    context.dependencies = new Map();
-    context.pending = [];
-    context.rendered = [];
     roots.delete(container);
 };
 const unmountAll = ()=>roots.forEach((_, container)=>unmount(container));
@@ -904,6 +799,9 @@ function epic_jsx_render(element, container) {
     }
     if (roots.has(container)) {
         unmount(container);
+    } else {
+        container.innerHTML = '' // Always clearing the container first.
+        ;
     }
     const root = {
         native: container,
@@ -949,23 +847,31 @@ function createTextElement(text) {
         }
     };
 }
+// Official signature (not working yet).
+// createElement<P>(type: React.ElementType<P>, props: P & { children?: React.ReactNode }, ...children: React.ReactNode[]): React.ReactElement<P> | null;
 function createElement(type, props) {
     for(var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++){
         children[_key - 2] = arguments[_key];
     }
+    let mappedChildren = children;
     // NOTE needed for browser JSX runtime
     if (props === null || props === void 0 ? void 0 : props.children) {
-        // biome-ignore lint/style/noParameterAssign: Much easier in this case.
-        children = Array.isArray(props.children) ? props.children : [
+        mappedChildren = Array.isArray(props.children) ? props.children : [
             props.children
         ];
         props.children = undefined;
+    }
+    // Required for successful rendering with markdown-to-jsx.
+    if (Array.isArray(children[0]) && children[0].length === 1 && typeof children[0][0] === 'string') {
+        mappedChildren = children[0];
+    } else if (Array.isArray(children[0]) && children[0].length > 1) {
+        mappedChildren = children[0];
     }
     return {
         type,
         props: {
             ...props,
-            children: children// Clear out falsy values.
+            children: mappedChildren// Clear out falsy values.
             .filter(// @ts-ignore
             (item)=>item !== undefined && item !== null && item !== false && item !== '')// Add text elements.
             .map((child)=>typeof child === 'object' ? child : createTextElement(child))
@@ -999,11 +905,13 @@ function cloneElement(element, props) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
   $N: () => (canProxy),
+  Be: () => (isLeaf),
   J1: () => (listGetters),
   Kb: () => (createBaseObject),
   Kn: () => (isObject),
   Ph: () => (updateProxyValues),
   cM: () => (log),
+  d7: () => (needsRegister),
   fm: () => (newProxy),
   n4: () => (isSetter),
   u0: () => (canPolyfill)
@@ -1050,6 +958,8 @@ const defaultHandlePromise = (promise)=>{
             throw promise;
     }
 };
+const isLeaf = (value)=>typeof value !== 'object' || value && Object.hasOwn(value, '_leaf');
+const needsRegister = (value)=>typeof value === 'object' && value && Object.hasOwn(value, '_leaf') && Object.hasOwn(value, '_register');
 // NOTE copy is required for proper function.
 const createBaseObject = (initialObject)=>{
     if (Array.isArray(initialObject)) {
@@ -1077,7 +987,11 @@ function set(parent, property) {
     };
 }
 function toggle(parent, property) {
-    return ()=>{
+    let propagate = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : false;
+    return (event)=>{
+        if (event && !propagate) {
+            event.stopPropagation();
+        }
         parent[property] = !parent[property];
     };
 }
@@ -1094,8 +1008,8 @@ __webpack_require__.d(__webpack_exports__, {
 
 // UNUSED EXPORTS: removeAllPlugins, list, ref, run, batch, observe, remove, set, plugin, load, toggle
 
-// EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 5 modules
-var epic_jsx = __webpack_require__(545);
+// EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 4 modules
+var epic_jsx = __webpack_require__(905);
 // EXTERNAL MODULE: ./node_modules/epic-state/helper.ts
 var helper = __webpack_require__(164);
 // EXTERNAL MODULE: ./node_modules/epic-state/plugin.ts
@@ -1453,6 +1367,8 @@ function epic_state_state() {
     derive(initialObject);
     let plugins = [];
     const baseObject = (0,helper/* createBaseObject */.Kb)(initialObject);
+    const id = Math.floor(Math.random() * 1000000) // Unique identifier for proxy objects.
+    ;
     const handler = {
         get (target, property, receiver) {
             if (property === 'parent') {
@@ -1471,6 +1387,9 @@ function epic_state_state() {
                 return plugins // Internal plugin access.
                 ;
             }
+            if (property === '_id') {
+                return id;
+            }
             if (property === 'addPlugin') {
                 return (newPlugin)=>plugins.push(typeof newPlugin === 'function' ? newPlugin('initialize', proxyObject) : newPlugin) // Add plugins after initialization.
                 ;
@@ -1483,10 +1402,16 @@ function epic_state_state() {
                     initial: true,
                     property,
                     parent: receiver ?? root,
-                    leaf: typeof value !== 'object',
+                    leaf: (0,helper/* isLeaf */.Be)(value),
                     value
                 });
                 track(root ?? receiver, property);
+            }
+            // Register receiver and property on custom data structures.
+            // TODO should only be done on first access.
+            if ((0,helper/* needsRegister */.d7)(value)) {
+                ;
+                value._register(receiver ?? root, property);
             }
             return value;
         },
@@ -1565,7 +1490,7 @@ function epic_state_state() {
                     parent: receiver ?? root,
                     value,
                     previousValue,
-                    leaf: typeof value !== 'object'
+                    leaf: (0,helper/* isLeaf */.Be)(value)
                 });
             }
             return true;
@@ -1701,7 +1626,7 @@ function removeAllPlugins() {
 __webpack_require__.d(__webpack_exports__, {
   $: () => (connect)
 });
-/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(545);
+/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(905);
 /* ESM import */var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(164);
 /* ESM import */var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(266);
 
@@ -1714,23 +1639,23 @@ const connect = (initialize)=>{
     const observedProperties = new _types__WEBPACK_IMPORTED_MODULE_1__/* .TupleArrayMap */.i();
     return {
         set: (param)=>{
-            let { property, parent, value, previousValue } = param;
+            let { property, parent: { _id: id }, value, previousValue } = param;
             if (value === previousValue) {
                 return;
             }
-            const components = observedProperties.get(parent, property);
+            const components = observedProperties.get(id, property);
             // Remove, as get will be tracked again during render.
-            if (observedProperties.has(parent, property)) {
-                observedProperties.delete(parent, property);
+            if (observedProperties.has(id, property)) {
+                observedProperties.delete(id, property);
             }
             // Trigger rerender on components.
             const renderedComponents = new Set();
             if (components) {
                 for (const component of components){
                     // Check if already rendered
-                    if (!renderedComponents.has(component.type)) {
+                    if (!renderedComponents.has(component.id)) {
                         component.rerender();
-                        renderedComponents.add(component.type) // Mark as rendered
+                        renderedComponents.add(component.id) // Mark as rendered
                         ;
                     }
                 }
@@ -1739,30 +1664,24 @@ const connect = (initialize)=>{
             (0,epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .getRoots */.Lt)();
         },
         get: (param)=>{
-            let { property, parent } = param;
+            let { property, parent: { _id: id } } = param;
             if (!epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.Th.current) {
                 return; // Accessed outside a component.
             }
-            const { component, type } = epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.Th.current;
+            const { component } = epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.Th.current;
             if (!(component === null || component === void 0 ? void 0 : component.rerender)) {
                 (0,_helper__WEBPACK_IMPORTED_MODULE_0__/* .log */.cM)('Cannot rerender epic-jsx component', 'warning');
                 return;
             }
             // Register rerender on current component.
-            if (observedProperties.has(parent, property)) {
-                const components = observedProperties.get(parent, property);
-                const alreadyRegistered = components === null || components === void 0 ? void 0 : components.some((value)=>value.type === type);
+            if (observedProperties.has(id, property)) {
+                const components = observedProperties.get(id, property);
+                const alreadyRegistered = components === null || components === void 0 ? void 0 : components.some((value)=>value.id === component.id);
                 if (!alreadyRegistered) {
-                    components === null || components === void 0 ? void 0 : components.push({
-                        rerender: component.rerender,
-                        type
-                    });
+                    components === null || components === void 0 ? void 0 : components.push(component);
                 }
-            } else if (!observedProperties.has(parent, property)) {
-                observedProperties.add(parent, property, {
-                    rerender: component.rerender,
-                    type
-                });
+            } else {
+                observedProperties.add(id, property, component);
             }
         },
         delete: ()=>{
