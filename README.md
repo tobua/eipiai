@@ -34,6 +34,9 @@ new Elysia().use(eipiai(routes, { path: 'api' })).listen(3000)
 
 On the server, in this case implemented with Bun's Elysia you define the routes with their types and the handler. The plugin will then inject the required POST endpoint on the desired path.
 
+> [!TIP]
+> Enable TypeScript `"strict": true` mode in your `tsconfig.json` to allow for optimal object schema inference.
+
 ## Vercel
 
 While not perfectly suited for Vercel Serverless functions it can still work. All routes will be handled by a single function inside the `/api` folder of your project. For this export the server as a POST variable. Regular TypeScript Serverless functions won't be able to handle a TypeScript dependency like this one unfortunately, so you'll have to bundle the file and inline all eipiai imports. To configure the route path, place the file at that location in the file system.

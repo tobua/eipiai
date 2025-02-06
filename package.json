@@ -14,8 +14,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@types/bun": "^1.2.1",
-    "elysia": "^1.2.10",
+    "@types/bun": "^1.2.2",
+    "elysia": "^1.2.12",
     "typescript": "^5.7.3",
     "zero-configuration": "^0.18.0"
   },

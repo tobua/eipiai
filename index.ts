@@ -70,7 +70,7 @@ function addSubscriber(route: string, id: number, callback: SubscriptionHandler)
   subscribers[route]?.push(callback)
 }
 
-const isSocketClosed = (socket: WebSocket) => socket.readyState === socket.CLOSED || socket.readyState === socket.CLOSING
+const isSocketClosed = (socket: any) => socket.readyState === socket.CLOSED || socket.readyState === socket.CLOSING
 
 export function socketClient<T extends ReturnType<typeof api>>(options?: {
   url?: string
@@ -152,15 +152,21 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
       responseData: any[],
       validation?: ZodIssue[],
     ) {
+      if (!subscribe) {
+        return false
+      }
+      // Subscriptions can't technically be erroneous, validation errors however will be shown here.
       if (error) {
         console.log(`Erroneous subscription response received for ${route}.`)
-        console.log(validation) // TODO pretty print validation messages.
+        if (validation) {
+          console.log(validation) // TODO pretty print validation messages.
+        }
+        return true
       }
-      if (subscribe && subscribers[route]) {
+      if (!error && subscribers[route]) {
         notifySubscribers(route, id, responseData)
         return true
       }
-      return false
     }
 
     function handleUnsubscribe(id: number, unsubscribe = false) {
