@@ -1,22 +1,145 @@
 (() => { // webpackBootstrap
 "use strict";
 var __webpack_modules__ = ({
-267: (function (__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
+184: (function (module, __unused_webpack___webpack_exports__, __webpack_require__) {
+__webpack_require__.a(module, async function (__webpack_handle_async_dependencies__, __webpack_async_result__) { try {
+/* ESM import */var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(129);
+/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(905);
+/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(93);
+/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(220);
+/* ESM import */var epic_state_connect__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(841);
+/* ESM import */var _index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(333);
+/// <reference types="@rsbuild/core/types" />
 
-// EXTERNAL MODULE: ./node_modules/epic-jsx/jsx.ts
-var jsx = __webpack_require__(129);
-// EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 4 modules
-var epic_jsx = __webpack_require__(905);
-// EXTERNAL MODULE: ./node_modules/epic-state/plugin.ts
-var epic_state_plugin = __webpack_require__(93);
-// EXTERNAL MODULE: ./node_modules/epic-state/index.ts + 3 modules
-var epic_state = __webpack_require__(220);
-// EXTERNAL MODULE: ./node_modules/epic-state/plugin/epic-jsx.ts
-var plugin_epic_jsx = __webpack_require__(841);
-;// CONCATENATED MODULE: ../index.ts
+
+
+
+
+(0,epic_state__WEBPACK_IMPORTED_MODULE_0__/* .plugin */.BA)(epic_state_connect__WEBPACK_IMPORTED_MODULE_1__/* .connect */.$);
+const data = (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .client */.Lp)({
+    url: 'http://localhost:3001/demo'
+});
+const { client: socket } = await (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .socketClient */.UX)({
+    url: 'ws://localhost:3002/socket-demo'
+});
+const store = (0,epic_state__WEBPACK_IMPORTED_MODULE_3__/* .state */.SB)({
+    loading: true,
+    error: true,
+    posts: []
+});
+const socketStore = (0,epic_state__WEBPACK_IMPORTED_MODULE_3__/* .state */.SB)({
+    loading: true,
+    error: true,
+    posts: [],
+    loadingTime: true,
+    errorTime: false,
+    time: '00:00'
+});
+async function loadData() {
+    const { error, data: posts } = await data.listPosts();
+    store.loading = false;
+    store.error = !!error;
+    store.posts = posts;
+}
+async function loadSocketData() {
+    const { error, data: posts } = await socket.listPosts();
+    socketStore.loading = false;
+    socketStore.error = !!error;
+    socketStore.posts = posts;
+    const { error: errorTime } = await socket.subscribeTime((time)=>{
+        socketStore.time = time;
+    }, 'hey');
+    socketStore.loadingTime = false;
+    socketStore.errorTime = !!errorTime;
+}
+loadData();
+loadSocketData();
+const InlineCode = (param)=>{
+    let { children } = param;
+    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("span", {
+        style: {
+            fontFamily: 'monospace',
+            backgroundColor: 'gray',
+            color: 'white',
+            padding: 3,
+            borderRadius: 3
+        },
+        children: children
+    });
+};
+function Time() {
+    if (socketStore.loadingTime || socketStore.errorTime) {
+        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("p", {
+            children: "Loading..."
+        });
+    }
+    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("p", {
+        children: socketStore.time
+    });
+}
+function Posts(param) {
+    let { data } = param;
+    if (data.loading) {
+        // @ts-ignore will be fixed in epic-jsx types.
+        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("p", {
+            children: "Loading data..."
+        });
+    }
+    if (data.error) {
+        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsxs */.BX)("p", {
+            children: [
+                "Failed to load data. Checkout the repository and run ",
+                /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(InlineCode, {
+                    children: "bun server.ts"
+                }),
+                " inside the ",
+                /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(InlineCode, {
+                    children: "demo"
+                }),
+                " folder."
+            ]
+        });
+    }
+    return data.posts.map((post)=>/*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("p", {
+            children: post.text
+        }, post.id));
+}
+(0,epic_jsx__WEBPACK_IMPORTED_MODULE_5__/* .render */.sY)(/*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsxs */.BX)("div", {
+    style: {
+        fontFamily: 'sans-serif',
+        display: 'flex',
+        gap: '10px',
+        flexDirection: 'column'
+    },
+    children: [
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("h1", {
+            children: "eipiai Demo"
+        }),
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(Posts, {
+            data: store
+        }),
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("h2", {
+            children: "WebSocket Connection"
+        }),
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(Posts, {
+            data: socketStore
+        }),
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(Time, {})
+    ]
+}));
+
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } }, 1);
+
+}),
+333: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+__webpack_require__.d(__webpack_exports__, {
+  Lp: () => (client),
+  UX: () => (socketClient)
+});
 
 const z = (/* unused pure expression or super */ null && (zod));
-const subscribers = (/* unused pure expression or super */ null && ({}));
+const subscribers = {};
 function api(methods) {
     return methods;
 }
@@ -214,7 +337,7 @@ function socketClient(options) {
         };
     });
 }
-function index_route() {
+function route() {
     for(var _len = arguments.length, inputs = new Array(_len), _key = 0; _key < _len; _key++){
         inputs[_key] = arguments[_key];
     }
@@ -226,7 +349,7 @@ function index_route() {
         ];
     };
 }
-function index_subscribe() {
+function subscribe() {
     for(var _len = arguments.length, output = new Array(_len), _key = 0; _key < _len; _key++){
         output[_key] = arguments[_key];
     }
@@ -239,83 +362,6 @@ function index_subscribe() {
         ];
     };
 }
-
-;// CONCATENATED MODULE: ./index.tsx
-/// <reference types="@rsbuild/core/types" />
-
-
-
-
-
-(0,epic_state_plugin/* plugin */.BA)(plugin_epic_jsx/* connect */.$);
-const index_data = client({
-    url: 'http://localhost:3001/demo'
-});
-const store = (0,epic_state/* state */.SB)({
-    loading: true,
-    error: true,
-    posts: []
-});
-async function loadData() {
-    const { error, data: posts } = await index_data.listPosts();
-    store.loading = false;
-    store.error = !!error;
-    store.posts = posts;
-}
-loadData();
-const InlineCode = (param)=>{
-    let { children } = param;
-    return /*#__PURE__*/ (0,jsx/* jsx */.tZ)("span", {
-        style: {
-            fontFamily: 'monospace',
-            backgroundColor: 'gray',
-            color: 'white',
-            padding: 3,
-            borderRadius: 3
-        },
-        children: children
-    });
-};
-function Posts() {
-    if (store.loading) {
-        // @ts-ignore will be fixed in epic-jsx types.
-        return /*#__PURE__*/ (0,jsx/* jsx */.tZ)("p", {
-            children: "Loading data..."
-        });
-    }
-    if (store.error) {
-        return /*#__PURE__*/ (0,jsx/* jsxs */.BX)("p", {
-            children: [
-                "Failed to load data. Checkout the repository and run ",
-                /*#__PURE__*/ (0,jsx/* jsx */.tZ)(InlineCode, {
-                    children: "bun server.ts"
-                }),
-                " inside the ",
-                /*#__PURE__*/ (0,jsx/* jsx */.tZ)(InlineCode, {
-                    children: "demo"
-                }),
-                " folder."
-            ]
-        });
-    }
-    return store.posts.map((post)=>/*#__PURE__*/ (0,jsx/* jsx */.tZ)("p", {
-            children: post.text
-        }, post.id));
-}
-(0,epic_jsx/* render */.sY)(/*#__PURE__*/ (0,jsx/* jsxs */.BX)("div", {
-    style: {
-        fontFamily: 'sans-serif',
-        display: 'flex',
-        gap: '10px',
-        flexDirection: 'column'
-    },
-    children: [
-        /*#__PURE__*/ (0,jsx/* jsx */.tZ)("h1", {
-            children: "eipiai Demo"
-        }),
-        /*#__PURE__*/ (0,jsx/* jsx */.tZ)(Posts, {})
-    ]
-}));
 
 
 }),
@@ -349,6 +395,85 @@ return module.exports;
 __webpack_require__.m = __webpack_modules__;
 
 /************************************************************************/
+// webpack/runtime/async_module
+(() => {
+var webpackQueues =
+	typeof Symbol === "function"
+		? Symbol("webpack queues")
+		: "__webpack_queues__";
+var webpackExports =
+	typeof Symbol === "function"
+		? Symbol("webpack exports")
+		: "__webpack_exports__";
+var webpackError =
+	typeof Symbol === "function" ? Symbol("webpack error") : "__webpack_error__";
+var resolveQueue = (queue) => {
+  if (queue && queue.d < 1) {
+    queue.d = 1;
+    queue.forEach((fn) => (fn.r--));
+		queue.forEach((fn) => (fn.r-- ? fn.r++ : fn()));
+	}
+}
+var wrapDeps = (deps) => {
+	return deps.map((dep) => {
+		if (dep !== null && typeof dep === "object") {
+			if (dep[webpackQueues]) return dep;
+			if (dep.then) {
+				var queue = [];
+				queue.d = 0;
+				dep.then((r) => {
+					obj[webpackExports] = r;
+					resolveQueue(queue);
+				},(e) => {
+					obj[webpackError] = e;
+					resolveQueue(queue);
+				});
+				var obj = {};
+				obj[webpackQueues] = (fn) => (fn(queue));
+				return obj;
+			}
+		}
+		var ret = {};
+		ret[webpackQueues] = function() {};
+		ret[webpackExports] = dep;
+		return ret;
+	});
+};
+__webpack_require__.a = (module, body, hasAwait) => {
+	var queue;
+	hasAwait && ((queue = []).d = -1);
+	var depQueues = new Set();
+	var exports = module.exports;
+	var currentDeps;
+	var outerResolve;
+	var reject;
+	var promise = new Promise((resolve, rej) => {
+		reject = rej;
+		outerResolve = resolve;
+	});
+	promise[webpackExports] = exports;
+	promise[webpackQueues] = (fn) => { queue && fn(queue), depQueues.forEach(fn), promise["catch"](function() {}); };
+	module.exports = promise;
+	body((deps) => {
+		currentDeps = wrapDeps(deps);
+		var fn;
+		var getResult = () => {
+			return currentDeps.map((d) => {
+				if (d[webpackError]) throw d[webpackError];
+				return d[webpackExports];
+			});
+		}
+		var promise = new Promise((resolve) => {
+			fn = () => (resolve(getResult));
+			fn.r = 0;
+			var fnQueue = (q) => (q !== queue && !depQueues.has(q) && (depQueues.add(q), q && !q.d && (fn.r++, q.push(fn))));
+			currentDeps.map((dep) => (dep[webpackQueues](fnQueue)));
+		});
+		return fn.r ? promise : getResult();
+	}, (err) => ((err ? reject(promise[webpackError] = err) : outerResolve(exports)), resolveQueue(queue)));
+	queue && queue.d < 0 && (queue.d = 0);
+};
+})();
 // webpack/runtime/define_property_getters
 (() => {
 __webpack_require__.d = function(exports, definition) {
@@ -421,7 +546,7 @@ __webpack_require__.O = function (result, chunkIds, fn, priority) {
 // webpack/runtime/rspack_version
 (() => {
 __webpack_require__.rv = function () {
-	return "1.2.2";
+	return "1.2.3";
 };
 
 })();
@@ -477,14 +602,14 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.2.2";
+__webpack_require__.ruid = "bundler=rspack@1.2.3";
 
 })();
 /************************************************************************/
 // startup
 // Load entry module and return exports
 // This entry module depends on other loaded chunks and execution need to be delayed
-var __webpack_exports__ = __webpack_require__.O(undefined, ["663"], function() { return __webpack_require__(267) });
+var __webpack_exports__ = __webpack_require__.O(undefined, ["663"], function() { return __webpack_require__(184) });
 __webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 })()
 ;

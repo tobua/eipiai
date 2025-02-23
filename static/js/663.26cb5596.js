@@ -219,6 +219,43 @@ function multipleInstancesWarning() {
         __webpack_require__.g.__epicJsx = true;
     }
 }
+function createRef() {
+    const refs = new Map();
+    const refObjects = [];
+    const handler = {
+        get (target, prop) {
+            if (prop in target) {
+                return target[prop];
+            }
+            if (refs.has(prop)) {
+                return refs.get(prop);
+            }
+            if (prop === 'size') {
+                return refObjects.length;
+            }
+            log(`Attempted to access unregistered ref with id="${prop}"`, 'warning');
+            // Return mock to avoid access errors.
+            return {
+                tag: 'div',
+                native: document.createElement('div')
+            };
+        }
+    };
+    return new Proxy({
+        byTag: (tag)=>refObjects.filter((ref)=>ref.tag === tag),
+        addRef: (id, ref)=>{
+            refs.set(id, ref);
+            refObjects.push(ref);
+        },
+        clear: ()=>{
+            refs.clear();
+            refObjects.length = 0;
+        },
+        hasRef: (id)=>{
+            return refs.has(id);
+        }
+    }, handler);
+}
 function debounce(method, wait) {
     let timeout// Avoid using NodeJS.Timeout to avoid clash with Bun types.
     ;
@@ -294,18 +331,6 @@ const svgProperties = [
     'wordSpacing',
     'writingMode'
 ];
-
-;// CONCATENATED MODULE: ./node_modules/epic-jsx/types.ts
-var types_Change = /*#__PURE__*/ function(Change) {
-    Change[Change["Update"] = 0] = "Update";
-    Change[Change["Add"] = 1] = "Add";
-    Change[Change["Delete"] = 2] = "Delete";
-    return Change;
-}({});
-
-;// CONCATENATED MODULE: ./node_modules/epic-jsx/browser.ts
-
-
 const sizeStyleProperties = [
     'width',
     'height',
@@ -324,6 +349,18 @@ const sizeStyleProperties = [
     'rowGap',
     'columnGap'
 ];
+
+;// CONCATENATED MODULE: ./node_modules/epic-jsx/types.ts
+var types_Change = /*#__PURE__*/ function(Change) {
+    Change[Change["Update"] = 0] = "Update";
+    Change[Change["Add"] = 1] = "Add";
+    Change[Change["Delete"] = 2] = "Delete";
+    return Change;
+}({});
+
+;// CONCATENATED MODULE: ./node_modules/epic-jsx/browser.ts
+
+
 function startsWithSizeProperty(propertyName) {
     return sizeStyleProperties.some((prop)=>propertyName.startsWith(prop));
 }
@@ -348,10 +385,10 @@ const isGone = (_, next)=>(key)=>!(key in next);
 // Listeners on new props might not have reference equality, so they need to be stored on assignment.
 const eventListeners = new Map();
 function updateNativeElement(element) {
-    let prevProps = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {}, nextProps = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : {};
+    let previousProps = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {}, nextProps = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : {};
     // Remove old or changed event listeners
     // biome-ignore lint/complexity/noForEach: Chained expression.
-    Object.keys(prevProps).filter(isEvent).filter((key)=>!(key in nextProps) || isNew(prevProps, nextProps)(key)).forEach((name)=>{
+    Object.keys(previousProps).filter(isEvent).filter((key)=>!(key in nextProps) || isNew(previousProps, nextProps)(key)).forEach((name)=>{
         var _eventListeners_get;
         const eventType = name.toLowerCase().substring(2) // Remove the "on" from onClick.
         ;
@@ -362,15 +399,18 @@ function updateNativeElement(element) {
     });
     // Remove old properties
     // biome-ignore lint/complexity/noForEach: Chained expression.
-    Object.keys(prevProps).filter(isProperty).filter(isGone(prevProps, nextProps)).forEach((name)=>{
+    Object.keys(previousProps).filter(isProperty).filter(isGone(previousProps, nextProps)).forEach((name)=>{
         // @ts-ignore Filtered for valid properties, maybe more checks necessary.
         element[name] = '';
     });
     // Set new or changed properties
     // biome-ignore lint/complexity/noForEach: Chained expression.
-    Object.keys(nextProps).filter(isProperty).filter(isNew(prevProps, nextProps)).forEach((name)=>{
-        if (name === 'ref') {
+    Object.keys(nextProps).filter(isProperty).filter(isNew(previousProps, nextProps)).forEach((name)=>{
+        if (name === 'ref' && typeof nextProps[name] === 'object') {
             nextProps[name].current = element;
+            return;
+        }
+        if (name === 'ref' && typeof nextProps[name] === 'string') {
             return;
         }
         if (name === 'value') {
@@ -392,7 +432,7 @@ function updateNativeElement(element) {
     });
     // Add event listeners
     // biome-ignore lint/complexity/noForEach: Chained expression.
-    Object.keys(nextProps).filter(isEvent).filter(isNew(prevProps, nextProps)).forEach((name)=>{
+    Object.keys(nextProps).filter(isEvent).filter(isNew(previousProps, nextProps)).forEach((name)=>{
         var _eventListeners_get;
         const eventType = name.toLowerCase().substring(2);
         element.addEventListener(eventType, nextProps[name]);
@@ -411,6 +451,34 @@ function mapLegacyProps(fiber) {
         }
         fiber.props.className = undefined;
     }
+}
+function addRefs(fiber, component) {
+    var _fiber_props, _fiber_props1;
+    // Add refs to component.
+    if (((_fiber_props = fiber.props) === null || _fiber_props === void 0 ? void 0 : _fiber_props.id) && fiber.native && component) {
+        component.ref.addRef(fiber.props.id, {
+            tag: fiber.native.tagName.toLowerCase(),
+            native: fiber.native
+        });
+    }
+    if (((_fiber_props1 = fiber.props) === null || _fiber_props1 === void 0 ? void 0 : _fiber_props1.ref) && fiber.native && component) {
+        component.ref.addRef(fiber.props.ref, {
+            tag: fiber.native.tagName.toLowerCase(),
+            native: fiber.native
+        });
+    }
+}
+function findNativeParent(fiber) {
+    let parent = fiber.parent;
+    let maxTries = 500;
+    while(!(parent === null || parent === void 0 ? void 0 : parent.native) && (parent === null || parent === void 0 ? void 0 : parent.parent) && maxTries > 0){
+        maxTries -= 1;
+        parent = parent.parent;
+    }
+    if (maxTries === 0) {
+        log('Ran out of tries finding native parent.', 'warning');
+    }
+    return parent;
 }
 function createNativeElement(fiber) {
     if (!fiber.type) {
@@ -434,7 +502,13 @@ function createNativeElement(fiber) {
 function commitDeletion(fiber, nativeParent) {
     if (fiber.native) {
         try {
-            nativeParent.removeChild(fiber.native);
+            if (nativeParent.isConnected && fiber.native.isConnected) {
+                nativeParent.removeChild(fiber.native);
+            } else if (fiber.native.isConnected) {
+                log("Trying to remove a node from a parent that's no longer in the DOM", 'warning');
+            } else {
+                log("Trying to remove a node that's no longer in the DOM", 'warning');
+            }
         } catch (_error) {
             // NOTE indicates a plugin error, should not happen.
             log('Failed to remove node from the DOM', 'warning');
@@ -447,19 +521,17 @@ function commitDeletion(fiber, nativeParent) {
         commitDeletion(fiber.child, nativeParent);
     }
 }
-function commitFiber(fiber) {
+function commitFiber(fiber, currentComponent) {
+    var _fiber_component;
     if (!fiber) {
         return;
     }
-    let { parent } = fiber;
-    let maxTries = 500;
-    while(!(parent === null || parent === void 0 ? void 0 : parent.native) && (parent === null || parent === void 0 ? void 0 : parent.parent) && maxTries > 0){
-        maxTries -= 1;
-        parent = parent.parent;
+    if ((_fiber_component = fiber.component) === null || _fiber_component === void 0 ? void 0 : _fiber_component.root) {
+        var _fiber_component1;
+        // biome-ignore lint/style/noParameterAssign: Much easier in this case.
+        currentComponent = (_fiber_component1 = fiber.component) === null || _fiber_component1 === void 0 ? void 0 : _fiber_component1.root.component;
     }
-    if (maxTries === 0) {
-        log('Ran out of tries at commitFiber.', 'warning');
-    }
+    const parent = findNativeParent(fiber);
     if (fiber.change === types_Change.Add && fiber.native) {
         var _parent_native;
         parent === null || parent === void 0 ? void 0 : (_parent_native = parent.native) === null || _parent_native === void 0 ? void 0 : _parent_native.appendChild(fiber.native);
@@ -475,17 +547,12 @@ function commitFiber(fiber) {
             commitDeletion(fiber, parent.native);
         }
     }
-    if (fiber.afterListeners) {
-        for (const callback of fiber.afterListeners){
-            callback.call(fiber.component);
-        }
-        fiber.afterListeners = [];
-    }
+    addRefs(fiber, currentComponent);
     if (fiber.child) {
-        commitFiber(fiber.child);
+        commitFiber(fiber.child, currentComponent);
     }
     if (fiber.sibling) {
-        commitFiber(fiber.sibling);
+        commitFiber(fiber.sibling, currentComponent);
     }
 }
 
@@ -495,7 +562,9 @@ function commitFiber(fiber) {
 
 
 function commit(context, fiber) {
-    context.deletions.forEach(commitFiber);
+    for (const fiber of context.deletions){
+        commitFiber(fiber);
+    }
     context.deletions.length = 0;
     if (fiber.child) {
         commitFiber(fiber.child);
@@ -524,7 +593,7 @@ function reconcileChildren(context, current) {
     var _current_previous;
     let index = 0;
     let previous = (_current_previous = current.previous) === null || _current_previous === void 0 ? void 0 : _current_previous.child;
-    let prevSibling;
+    let previousSibling;
     let maxTries = 500;
     // TODO compare children.length to previous element length.
     while((index < children.length || previous) && maxTries > 0){
@@ -534,18 +603,15 @@ function reconcileChildren(context, current) {
         // TODO also compare props.
         const fragment = element === null || previous === null;
         const isSameType = !fragment && (element === null || element === void 0 ? void 0 : element.type) === (previous === null || previous === void 0 ? void 0 : previous.type);
+        if (previous && !isSameType) {
+            // Delete the old node and its children when types don't match
+            deleteChildren(context, previous);
+        }
         if (isSameType && previous) {
             newFiber = createUpdatedFiber(current, previous, element);
-        }
-        if (element && isSameType && !previous) {
+        } else if (element) {
+            // Create new fiber for different types or new elements
             newFiber = createNewFiber(current, element, previous);
-        }
-        // Newly added (possibly unnecessary).
-        if (element && !isSameType) {
-            newFiber = createNewFiber(current, element, previous);
-        }
-        if (previous && !isSameType) {
-            deleteChildren(context, previous);
         }
         const item = previous;
         if (previous) {
@@ -553,10 +619,10 @@ function reconcileChildren(context, current) {
         }
         if (index === 0) {
             current.child = newFiber;
-        } else if (element && prevSibling) {
-            prevSibling.sibling = newFiber;
+        } else if (element && previousSibling) {
+            previousSibling.sibling = newFiber;
         }
-        prevSibling = newFiber;
+        previousSibling = newFiber;
         index += 1;
         // NOTE added to prevent endless loop after state update to component.
         if (index > children.length) {
@@ -603,11 +669,9 @@ function deleteChildren(context, fiber) {
     }
 }
 function rerender(context, fiber) {
-    context.pending.push({
-        ...fiber,
-        sibling: undefined,
-        previous: fiber
-    });
+    fiber.sibling = undefined;
+    fiber.previous = fiber;
+    context.pending.push(fiber);
 }
 function updateFunctionComponent(context, fiber) {
     if (typeof fiber.type !== 'function') {
@@ -616,9 +680,10 @@ function updateFunctionComponent(context, fiber) {
     if (typeof fiber.hooks === 'undefined') {
         fiber.hooks = [];
     }
+    const isFirstRender = !fiber.id;
+    let pluginResult;
     fiber.hooks.length = 0;
     Renderer.context = context;
-    fiber.afterListeners = [];
     // TODO id in fiber shouldn't be optional, assign during creation.
     if (!fiber.id) {
         var _fiber_previous;
@@ -629,29 +694,50 @@ function updateFunctionComponent(context, fiber) {
         root: fiber,
         context,
         rerender: ()=>rerender(context, fiber),
-        // TODO memoize.
-        get refs () {
-            return getComponentRefsFromTree(fiber, [], true);
+        // TODO implement and test ref clearing on rerenders.
+        ref: createRef(),
+        each (callback) {
+            context.afterListeners.push(()=>callback.call(fiber.component));
         },
-        get refsNested () {
-            return getComponentRefsFromTree(fiber, [], false);
-        },
-        refsByTag (tag) {
-            return getComponentRefsFromTreeByTag(fiber, [], tag);
+        once (callback) {
+            if (isFirstRender) {
+                context.afterListeners.push(()=>callback.call(fiber.component));
+            }
         },
         after (callback) {
-            var _fiber_afterListeners;
-            (_fiber_afterListeners = fiber.afterListeners) === null || _fiber_afterListeners === void 0 ? void 0 : _fiber_afterListeners.push(callback);
-        }
+            log('this.after() lifecycle is deprecated, use this.once() or this.each()', 'warning');
+            if (isFirstRender) {
+                context.afterListeners.push(()=>callback.call(fiber.component));
+            }
+        },
+        plugin (plugins) {
+            for (const plugin of plugins){
+                if (plugin) {
+                    pluginResult = plugin;
+                    throw new Error('plugin') // early-return approach.
+                    ;
+                }
+            }
+        },
+        state: undefined
     };
     Renderer.current = fiber;
     if (Array.isArray(fiber.props.children) && fiber.props.children.length === 0) {
         // biome-ignore lint/performance/noDelete: Clean up meaningless props.
         delete fiber.props.children;
     }
-    const children = [
-        fiber.type.call(fiber.component, fiber.props)
-    ];
+    let children = [];
+    try {
+        children = [
+            fiber.type.call(fiber.component, fiber.props)
+        ];
+    } catch (error) {
+        if (error.message === 'plugin' && pluginResult) {
+            children = [
+                pluginResult
+            ];
+        }
+    }
     Renderer.current = undefined;
     Renderer.context = undefined;
     reconcileChildren(context, fiber, children.flat());
@@ -700,8 +786,10 @@ function process(deadline, context) {
             ;
         }
     }
+    context.afterListeners = [];
     let shouldYield = false;
-    let maxTries = 500;
+    let maxTries = 5000 // Prevent infinite loop, long lists can take a lot of tries.
+    ;
     while(context.current && !shouldYield && maxTries > 0){
         maxTries -= 1;
         // Render current fiber.
@@ -723,6 +811,12 @@ function process(deadline, context) {
     if (!context.current && context.rendered.length > 0) {
         for (const fiber of context.rendered){
             commit(context, fiber);
+        }
+        if (context.afterListeners) {
+            for (const callback of context.afterListeners){
+                callback.call(null);
+            }
+            context.afterListeners = [];
         }
         context.rendered.length = 0;
     }
@@ -755,7 +849,8 @@ const roots = new Map();
 // @ts-ignore
 const Fragment = (/* unused pure expression or super */ null && (undefined)) // Symbol.for('react.fragment')
 ;
-const getRoot = (container)=>{
+const getRoot = function() {
+    let container = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : document.body;
     if (!roots.has(container)) {
         return;
     }
@@ -821,7 +916,8 @@ function epic_jsx_render(element, container) {
         pending: [
             root
         ],
-        rendered: []
+        rendered: [],
+        afterListeners: []
     };
     roots.set(container, context);
     context.deletions = [];
@@ -986,6 +1082,11 @@ function set(parent, property) {
         parent[property] = value;
     };
 }
+function setValue(parent, property, cast) {
+    return (event)=>{
+        parent[property] = cast ? cast(event.target.value) : event.target.value;
+    };
+}
 function toggle(parent, property) {
     let propagate = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : false;
     return (event)=>{
@@ -994,6 +1095,17 @@ function toggle(parent, property) {
         }
         parent[property] = !parent[property];
     };
+}
+function multipleInstancesWarning() {
+    if (true) {
+        return;
+    }
+    // Ensure plugin is only loaded once from a single source (will not work properly otherwise).
+    if (typeof __webpack_require__.g.__epicState !== 'undefined') {
+        log('Multiple instances of epic-state have been loaded, plugin might not work as expected', 'warning');
+    } else {
+        __webpack_require__.g.__epicState = true;
+    }
 }
 
 
@@ -1006,7 +1118,7 @@ __webpack_require__.d(__webpack_exports__, {
   SB: () => (/* binding */ epic_state_state)
 });
 
-// UNUSED EXPORTS: removeAllPlugins, list, ref, run, batch, observe, remove, set, plugin, load, toggle
+// UNUSED EXPORTS: setValue, removeAllPlugins, list, ref, run, batch, observe, remove, set, plugin, load, toggle
 
 // EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 4 modules
 var epic_jsx = __webpack_require__(905);
@@ -1355,6 +1467,10 @@ function epic_state_state() {
         return renderStateMap.get(epic_jsx/* Renderer,current,id */.Th.current.id);
     }
     let initialization = true;
+    if (typeof initialObject === 'function') {
+        // biome-ignore lint/style/noParameterAssign: Much easier in this case.
+        initialObject = initialObject();
+    }
     if (!(0,helper/* isObject */.Kn)(initialObject)) {
         (0,helper/* log */.cM)('Only objects can be made observable with state()', 'error');
     }
