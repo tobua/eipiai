@@ -1,4 +1,4 @@
-import { type ZodIssue, type ZodTypeAny, z as zod } from 'zod'
+import { z as zod } from 'zod'
 import type { Body, JsonSerializable, MappedMethods, Methods, ServerResponse, SubscriptionHandler } from './types'
 
 export const z = zod
@@ -150,7 +150,7 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
       id: number,
       error: boolean,
       responseData: any[],
-      validation?: ZodIssue[],
+      validation?: zod.ZodIssue[],
     ) {
       if (!subscribe) {
         return false
@@ -211,7 +211,7 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
   })
 }
 
-export function route<T extends ZodTypeAny[]>(...inputs: T) {
+export function route<T extends zod.ZodTypeAny[]>(...inputs: T) {
   return (
     handler: (
       options: {
@@ -226,7 +226,7 @@ export function route<T extends ZodTypeAny[]>(...inputs: T) {
   }
 }
 
-export function subscribe<T extends ZodTypeAny[], U extends any[]>(...output: T) {
+export function subscribe<T extends zod.ZodTypeAny[], U extends any[]>(...output: T) {
   // TODO can make function all internal if no filter needed.
   return (filter?: (...values: U) => boolean) => {
     // @ts-ignore zod.tuple working, but types fail...
