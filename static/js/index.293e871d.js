@@ -1,14 +1,14 @@
 (() => { // webpackBootstrap
 "use strict";
 var __webpack_modules__ = ({
-184: (function (module, __unused_webpack___webpack_exports__, __webpack_require__) {
+315: (function (module, __unused_webpack___webpack_exports__, __webpack_require__) {
 __webpack_require__.a(module, async function (__webpack_handle_async_dependencies__, __webpack_async_result__) { try {
-/* ESM import */var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(129);
-/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(905);
-/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(93);
-/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(220);
-/* ESM import */var epic_state_connect__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(841);
-/* ESM import */var _index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(333);
+/* ESM import */var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(314);
+/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(653);
+/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(499);
+/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(622);
+/* ESM import */var epic_state_connect__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(983);
+/* ESM import */var _index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(292);
 /// <reference types="@rsbuild/core/types" />
 
 
@@ -132,7 +132,7 @@ __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } }, 1);
 
 }),
-333: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+292: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.d(__webpack_exports__, {
   Lp: () => (client),
   UX: () => (socketClient)
@@ -143,6 +143,13 @@ const subscribers = {};
 function api(methods) {
     return methods;
 }
+async function getContext(context) {
+    if (typeof context === 'function') {
+        const result = context();
+        return result instanceof Promise ? await result : result;
+    }
+    return context ?? {};
+}
 function client(options) {
     return new Proxy({}, {
         get (_target, route) {
@@ -151,12 +158,13 @@ function client(options) {
                     args[_key] = arguments[_key];
                 }
                 try {
+                    const context = await getContext(options === null || options === void 0 ? void 0 : options.context);
                     const response = await fetch((options === null || options === void 0 ? void 0 : options.url) ?? 'http://localhost:3000/api', {
                         method: 'POST',
                         body: JSON.stringify({
                             method: route,
                             data: args,
-                            context: typeof (options === null || options === void 0 ? void 0 : options.context) === 'function' ? options.context() : (options === null || options === void 0 ? void 0 : options.context) ?? {}
+                            context
                         }),
                         headers: {
                             'Content-Type': 'application/json'
@@ -175,12 +183,13 @@ function client(options) {
 function checkIfSubscription(args) {
     return typeof args[0] === 'function';
 }
-function sendSocketMessage(socket, route, args, isSubscription, options) {
+async function sendSocketMessage(socket, route, args, isSubscription, options) {
     const id = Math.floor(Math.random() * 1000000);
+    const context = await getContext(options === null || options === void 0 ? void 0 : options.context);
     socket.send(JSON.stringify({
         method: route,
         data: isSubscription ? args[1] : args,
-        context: typeof (options === null || options === void 0 ? void 0 : options.context) === 'function' ? options.context() : (options === null || options === void 0 ? void 0 : options.context) ?? {},
+        context,
         subscription: isSubscription,
         id
     }));
@@ -210,7 +219,7 @@ function socketClient(options) {
                         };
                     }
                     const isSubscription = checkIfSubscription(args);
-                    const id = sendSocketMessage(socket, route, args, isSubscription, options);
+                    const id = await sendSocketMessage(socket, route, args, isSubscription, options);
                     if (isSubscription) {
                         addSubscriber(route, id, args[0]);
                     }
@@ -476,7 +485,7 @@ __webpack_require__.a = (module, body, hasAwait) => {
 })();
 // webpack/runtime/define_property_getters
 (() => {
-__webpack_require__.d = function(exports, definition) {
+__webpack_require__.d = (exports, definition) => {
 	for(var key in definition) {
         if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
             Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
@@ -486,7 +495,7 @@ __webpack_require__.d = function(exports, definition) {
 })();
 // webpack/runtime/global
 (() => {
-__webpack_require__.g = (function () {
+__webpack_require__.g = (() => {
 	if (typeof globalThis === 'object') return globalThis;
 	try {
 		return this || new Function('return this')();
@@ -494,19 +503,15 @@ __webpack_require__.g = (function () {
 		if (typeof window === 'object') return window;
 	}
 })();
-
 })();
 // webpack/runtime/has_own_property
 (() => {
-__webpack_require__.o = function (obj, prop) {
-	return Object.prototype.hasOwnProperty.call(obj, prop);
-};
-
+__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 })();
 // webpack/runtime/on_chunk_loaded
 (() => {
 var deferred = [];
-__webpack_require__.O = function (result, chunkIds, fn, priority) {
+__webpack_require__.O = (result, chunkIds, fn, priority) => {
 	if (chunkIds) {
 		priority = priority || 0;
 		for (var i = deferred.length; i > 0 && deferred[i - 1][2] > priority; i--)
@@ -516,16 +521,12 @@ __webpack_require__.O = function (result, chunkIds, fn, priority) {
 	}
 	var notFulfilled = Infinity;
 	for (var i = 0; i < deferred.length; i++) {
-		var chunkIds = deferred[i][0],
-			fn = deferred[i][1],
-			priority = deferred[i][2];
+		var [chunkIds, fn, priority] = deferred[i];
 		var fulfilled = true;
 		for (var j = 0; j < chunkIds.length; j++) {
 			if (
 				(priority & (1 === 0) || notFulfilled >= priority) &&
-				Object.keys(__webpack_require__.O).every(function (key) {
-					return __webpack_require__.O[key](chunkIds[j]);
-				})
+				Object.keys(__webpack_require__.O).every((key) => (__webpack_require__.O[key](chunkIds[j])))
 			) {
 				chunkIds.splice(j--, 1);
 			} else {
@@ -545,10 +546,7 @@ __webpack_require__.O = function (result, chunkIds, fn, priority) {
 })();
 // webpack/runtime/rspack_version
 (() => {
-__webpack_require__.rv = function () {
-	return "1.2.3";
-};
-
+__webpack_require__.rv = () => ("1.3.2")
 })();
 // webpack/runtime/jsonp_chunk_loading
 (() => {
@@ -557,20 +555,14 @@ __webpack_require__.rv = function () {
       // undefined = chunk not loaded, null = chunk preloaded/prefetched
       // [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
       var installedChunks = {"980": 0,};
-      __webpack_require__.O.j = function (chunkId) {
-	return installedChunks[chunkId] === 0;
-};
+      __webpack_require__.O.j = (chunkId) => (installedChunks[chunkId] === 0);
 // install a JSONP callback for chunk loading
-var webpackJsonpCallback = function (parentChunkLoadingFunction, data) {
-	var chunkIds = data[0];
-	var moreModules = data[1];
-	var runtime = data[2];
+var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
+	var [chunkIds, moreModules, runtime] = data;
 	// add "moreModules" to the modules object,
 	// then flag all "chunkIds" as loaded and fire callback
-	var moduleId,
-		chunkId,
-		i = 0;
-	if (chunkIds.some(function (id) { return installedChunks[id] !== 0 })) {
+	var moduleId, chunkId, i = 0;
+	if (chunkIds.some((id) => (installedChunks[id] !== 0))) {
 		for (moduleId in moreModules) {
 			if (__webpack_require__.o(moreModules, moduleId)) {
 				__webpack_require__.m[moduleId] = moreModules[moduleId];
@@ -602,14 +594,14 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.2.3";
+__webpack_require__.ruid = "bundler=rspack@1.3.2";
 
 })();
 /************************************************************************/
 // startup
 // Load entry module and return exports
 // This entry module depends on other loaded chunks and execution need to be delayed
-var __webpack_exports__ = __webpack_require__.O(undefined, ["663"], function() { return __webpack_require__(184) });
+var __webpack_exports__ = __webpack_require__.O(undefined, ["481"], function() { return __webpack_require__(315) });
 __webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 })()
 ;

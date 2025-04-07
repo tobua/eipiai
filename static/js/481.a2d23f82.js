@@ -1,4 +1,4 @@
-(self['webpackChunkdemo'] = self['webpackChunkdemo'] || []).push([["663"], {
+(self["webpackChunkdemo"] = self["webpackChunkdemo"] || []).push([["481"], {
 296: (function (module) {
 function debounce(function_, wait = 100, options = {}) {
 	if (typeof function_ !== 'function') {
@@ -106,7 +106,7 @@ module.exports = debounce;
 
 
 }),
-905: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+653: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
@@ -116,7 +116,7 @@ __webpack_require__.d(__webpack_exports__, {
   sY: () => (/* binding */ epic_jsx_render)
 });
 
-// UNUSED EXPORTS: createElement, unmountAll, useEffect, debounce, useMemo, useCallback, jsxs, jsx, unmount, jsxDEV, useState, cloneElement, default, useRef, Fragment, getRoot
+// UNUSED EXPORTS: useCallback, useMemo, useState, jsxs, useEffect, default, jsx, unmount, jsxDEV, unmountAll, createElement, Fragment, cloneElement, useRef, debounce, getRoot
 
 // EXTERNAL MODULE: ./node_modules/logua/dist/index.js
 var dist = __webpack_require__(224);
@@ -928,7 +928,7 @@ multipleInstancesWarning();
 
 
 }),
-129: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+314: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
   BX: () => (jsxs),
@@ -997,7 +997,7 @@ function cloneElement(element, props) {
 
 
 }),
-164: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+514: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
   $N: () => (canProxy),
@@ -1110,7 +1110,7 @@ function multipleInstancesWarning() {
 
 
 }),
-220: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+622: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
@@ -1118,14 +1118,14 @@ __webpack_require__.d(__webpack_exports__, {
   SB: () => (/* binding */ epic_state_state)
 });
 
-// UNUSED EXPORTS: setValue, removeAllPlugins, list, ref, run, batch, observe, remove, set, plugin, load, toggle
+// UNUSED EXPORTS: setValue, observe, list, ref, run, batch, remove, removeAllPlugins, set, plugin, load, toggle
 
 // EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 4 modules
-var epic_jsx = __webpack_require__(905);
+var epic_jsx = __webpack_require__(653);
 // EXTERNAL MODULE: ./node_modules/epic-state/helper.ts
-var helper = __webpack_require__(164);
+var helper = __webpack_require__(514);
 // EXTERNAL MODULE: ./node_modules/epic-state/plugin.ts
-var epic_state_plugin = __webpack_require__(93);
+var epic_state_plugin = __webpack_require__(499);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/batching.ts
 
 
@@ -1440,7 +1440,7 @@ function derive(proxy) {
 }
 
 // EXTERNAL MODULE: ./node_modules/epic-state/types.ts + 1 modules
-var types = __webpack_require__(266);
+var types = __webpack_require__(341);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/index.ts
  // TODO import should be optional and not required, pass along with connect.
 
@@ -1668,14 +1668,14 @@ function remove(proxyObject) {
 
 
 }),
-93: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+499: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
   BA: () => (plugin),
   bP: () => (initializePlugins),
   xv: () => (callPlugins)
 });
-/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(266);
+/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(341);
 
 const globalPlugins = [];
 function initializePlugins(state, plugin) {
@@ -1737,14 +1737,14 @@ function removeAllPlugins() {
 
 
 }),
-841: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+983: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
   $: () => (connect)
 });
-/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(905);
-/* ESM import */var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(164);
-/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(266);
+/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(653);
+/* ESM import */var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(514);
+/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(341);
 
 
 
@@ -1808,7 +1808,7 @@ const connect = (initialize)=>{
 
 
 }),
-266: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+341: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
