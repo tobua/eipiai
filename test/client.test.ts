@@ -76,6 +76,23 @@ test('Custom shared variables can be configured.', async () => {
   expect(await data.sharedVariable()).toEqual({ error: false, data: 2 })
 })
 
+test('Context can be asynchronous.', async () => {
+  const data = client<typeof routes>({
+    context: async () =>
+      new Promise((done) =>
+        setTimeout(
+          () =>
+            done({
+              uid: 3,
+            }),
+          10,
+        ),
+      ),
+  })
+
+  expect(await data.sharedVariable()).toEqual({ error: false, data: 3 })
+})
+
 test('Route error handler can return custom message.', async () => {
   const data = client<typeof routes>({ context: { uid: '789' } })
 

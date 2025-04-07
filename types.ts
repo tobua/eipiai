@@ -23,6 +23,11 @@ export type ServerResponse = {
   unsubscribe?: boolean
   validation?: ZodIssue[]
 }
+export type Options = {
+  url?: string
+  context?: (() => JsonSerializable | Promise<JsonSerializable>) | JsonSerializable
+  // TODO onOffline?: (online: boolean) => void
+}
 
 export const bodySchema = z
   .object({

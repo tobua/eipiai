@@ -1,5 +1,5 @@
 import { z as zod } from 'zod'
-import type { Body, JsonSerializable, MappedMethods, Methods, ServerResponse, SubscriptionHandler } from './types'
+import type { Body, JsonSerializable, MappedMethods, Methods, Options, ServerResponse, SubscriptionHandler } from './types'
 
 export const z = zod
 
@@ -9,20 +9,26 @@ export function api<T extends Methods>(methods: T): MappedMethods<T> {
   return methods as unknown as MappedMethods<T>
 }
 
-export function client<T extends ReturnType<typeof api>>(options?: {
-  url?: string
-  context?: (() => JsonSerializable) | JsonSerializable
-}): T {
+async function getContext(context?: (() => JsonSerializable | Promise<JsonSerializable>) | JsonSerializable) {
+  if (typeof context === 'function') {
+    const result = context()
+    return result instanceof Promise ? await result : result
+  }
+  return context ?? {}
+}
+
+export function client<T extends ReturnType<typeof api>>(options?: Options): T {
   return new Proxy({} as T, {
     get(_target, route: string) {
       return async (...args: JsonSerializable[]) => {
         try {
+          const context = await getContext(options?.context)
           const response = await fetch(options?.url ?? 'http://localhost:3000/api', {
             method: 'POST',
             body: JSON.stringify({
               method: route,
               data: args,
-              context: typeof options?.context === 'function' ? options.context() : (options?.context ?? {}),
+              context,
             } as Body),
             headers: {
               'Content-Type': 'application/json',
@@ -42,19 +48,20 @@ function checkIfSubscription(args: JsonSerializable[]): boolean {
   return typeof args[0] === 'function'
 }
 
-function sendSocketMessage(
+async function sendSocketMessage(
   socket: any, // WebSocket will lead to conflict when undici-types installed.
   route: string,
   args: JsonSerializable[],
   isSubscription: boolean,
-  options?: { context?: (() => JsonSerializable) | JsonSerializable },
+  options?: Options,
 ) {
   const id = Math.floor(Math.random() * 1000000)
+  const context = await getContext(options?.context)
   socket.send(
     JSON.stringify({
       method: route,
       data: isSubscription ? args[1] : args,
-      context: typeof options?.context === 'function' ? options.context() : (options?.context ?? {}),
+      context,
       subscription: isSubscription,
       id,
     } as Body),
@@ -72,10 +79,9 @@ function addSubscriber(route: string, id: number, callback: SubscriptionHandler)
 
 const isSocketClosed = (socket: any) => socket.readyState === socket.CLOSED || socket.readyState === socket.CLOSING
 
-export function socketClient<T extends ReturnType<typeof api>>(options?: {
-  url?: string
-  context?: (() => JsonSerializable) | JsonSerializable
-}): Promise<{ client: T; close: () => void; error: boolean }> {
+export function socketClient<T extends ReturnType<typeof api>>(
+  options?: Options,
+): Promise<{ client: T; close: () => void; error: boolean }> {
   return new Promise((done) => {
     const socket = new WebSocket(options?.url ?? 'ws://localhost:3000/api')
 
@@ -87,7 +93,7 @@ export function socketClient<T extends ReturnType<typeof api>>(options?: {
           }
 
           const isSubscription = checkIfSubscription(args)
-          const id = sendSocketMessage(socket, route, args, isSubscription, options)
+          const id = await sendSocketMessage(socket, route, args, isSubscription, options)
 
           if (isSubscription) {
             addSubscriber(route, id, args[0] as unknown as SubscriptionHandler)
