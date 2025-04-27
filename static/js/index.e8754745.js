@@ -546,7 +546,7 @@ __webpack_require__.O = (result, chunkIds, fn, priority) => {
 })();
 // webpack/runtime/rspack_version
 (() => {
-__webpack_require__.rv = () => ("1.3.2")
+__webpack_require__.rv = () => ("1.3.7")
 })();
 // webpack/runtime/jsonp_chunk_loading
 (() => {
@@ -586,15 +586,12 @@ var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
 
 var chunkLoadingGlobal = self["webpackChunkdemo"] = self["webpackChunkdemo"] || [];
 chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
-chunkLoadingGlobal.push = webpackJsonpCallback.bind(
-	null,
-	chunkLoadingGlobal.push.bind(chunkLoadingGlobal)
-);
+chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.3.2";
+__webpack_require__.ruid = "bundler=rspack@1.3.7";
 
 })();
 /************************************************************************/
