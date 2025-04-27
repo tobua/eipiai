@@ -85,6 +85,10 @@ export function socket(routes: Methods, options?: { path?: string }) {
       }),
       query: t.Object({}),
       message(ws, message: Body) {
+        if (!app.server?.port) {
+          // TODO server already closed this shouldn't be necessary.
+          return ws.send({ error: true, id: message.id } as ServerResponse)
+        }
         if (!(message.method && Object.hasOwn(routes, message.method))) {
           return ws.send({ error: true, id: message.id } as ServerResponse)
         }

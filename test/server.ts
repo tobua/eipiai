@@ -4,23 +4,24 @@ import { socket } from '../socket'
 import type { Methods } from '../types'
 
 export function startServer(methods: Methods, port = 3000, path = 'api') {
-  const { server } = new Elysia()
+  const elysia = new Elysia()
     .onBeforeHandle(({ request }) => {
-      console.log(`${request.method} request to ${request.url}`)
+      // TODO probably Elysia bug, without accessing port, requests can still pass through after stop.
+      console.log(`${request.method} request to ${request.url}`, elysia.server.port)
     })
     .use(eipiai(methods, { path }))
     .listen(port)
 
-  const url = `${server.url.toString()}${path}`
+  const url = `${elysia.server.url.toString()}${path}`
   console.log(`Server running on ${url}!`)
-  return { url }
+  return { url, close: () => elysia.stop(), running: () => elysia.server?.port !== undefined }
 }
 
 export function startWebsocketServer(methods: Methods, port = 3000, path = 'api') {
   const { inject, subscriptions } = socket(methods, { path })
-  new Elysia().use(inject).listen(port)
+  const elysia = new Elysia().use(inject).listen(port)
 
   const url = new URL(path, `ws://localhost:${port}`).toString()
   console.log(`Websocket running on ${url}!`)
-  return { url, subscriptions }
+  return { url, subscriptions, close: () => elysia.stop(), running: () => elysia.server?.port !== undefined }
 }

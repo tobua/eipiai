@@ -13,11 +13,11 @@ const methods = {
 
 const routes = api(methods)
 
-const { url, subscriptions } = startWebsocketServer(routes, 3001) // Cannot use same port as other suite.
+const server = startWebsocketServer(routes, 3001) // Cannot use same port as other suite.
 const wait = async () => await new Promise((done) => setTimeout(done, 20))
 
 test('Initializes client and returns regular data.', async () => {
-  const { client, close } = await socketClient<typeof routes>({ url })
+  const { client, close } = await socketClient<typeof routes>({ url: server.url })
   expect(await client.listPosts()).toEqual({ error: false, data: [1, 2, 3] })
   expect(await client.getPost(3)).toEqual({ error: false, data: [3] })
 
@@ -25,14 +25,14 @@ test('Initializes client and returns regular data.', async () => {
 })
 
 test('Initializes client and subscribes to various routes.', async () => {
-  const { client, close } = await socketClient<typeof routes>({ url, context: { uid: '123' } })
+  const { client, close } = await socketClient<typeof routes>({ url: server.url, context: { uid: '123' } })
 
-  expect(subscriptions).toEqual({})
+  expect(server.subscriptions).toEqual({})
 
   const subscribePostsMock = mock<(data: { text: string }) => void>()
   await client.subscribePosts(subscribePostsMock)
 
-  expect(subscriptions.subscribePosts).toBeDefined()
+  expect(server.subscriptions.subscribePosts).toBeDefined()
 
   const data = { text: 'Newly added post.' }
 
@@ -45,9 +45,9 @@ test('Initializes client and subscribes to various routes.', async () => {
   const subscribePostMock = mock<(data: number) => void>()
   client.subscribePost(subscribePostMock, 2) // Skipping await
 
-  expect(subscriptions.subscribePost).not.toBeDefined()
+  expect(server.subscriptions.subscribePost).not.toBeDefined()
   await wait()
-  expect(subscriptions.subscribePost).toBeDefined()
+  expect(server.subscriptions.subscribePost).toBeDefined()
 
   callSubscription('subscribePost', 5)
   await wait()
@@ -62,7 +62,7 @@ test('Initializes client and subscribes to various routes.', async () => {
   const subscribePostFilteredMock = mock<(data: number) => void>()
   await client.subscribePost(subscribePostFilteredMock, 1) // Odd number, filtered out on server.
 
-  expect(subscriptions.subscribePost).toBeDefined()
+  expect(server.subscriptions.subscribePost).toBeDefined()
 
   callSubscription('subscribePost', 5)
   callSubscription('subscribePost', 10)
@@ -85,7 +85,7 @@ test('Initializes client and subscribes to various routes.', async () => {
 
 test('Can unsubscribe from previous subscription.', async () => {
   reset()
-  const { client, close } = await socketClient<typeof routes>({ url, context: { uid: '123' } })
+  const { client, close } = await socketClient<typeof routes>({ url: server.url, context: { uid: '123' } })
 
   const firstSubscribePostsMock = mock()
   const secondSubscribePostsMock = mock()
@@ -110,9 +110,22 @@ test('Can unsubscribe from previous subscription.', async () => {
 })
 
 test('Returns error when socket connection closed.', async () => {
-  const { client, close } = await socketClient<typeof routes>({ url, context: { uid: '123' } })
+  const { client, close } = await socketClient<typeof routes>({ url: server.url, context: { uid: '123' } })
 
   close()
   const { error } = await client.listPosts()
   expect(error).toBe(true)
+})
+
+test('Errors when server is closed.', async () => {
+  const { client, close } = await socketClient<typeof routes>({ url: server.url, context: { uid: '123' } })
+
+  expect(await client.listPosts()).toEqual({ error: false, data: [1, 2, 3] })
+
+  await server.close()
+
+  expect(server.running()).toBe(false)
+  expect(await client.listPosts()).toEqual({ error: true, data: undefined })
+
+  close()
 })

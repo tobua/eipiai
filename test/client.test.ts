@@ -22,7 +22,7 @@ const methods = {
 
 const routes = api(methods)
 
-const { url } = startServer(routes) // Elysia
+let server = startServer(routes) // Elysia
 
 test('Initializes client and returns data.', async () => {
   const data = client<typeof routes>()
@@ -105,7 +105,8 @@ test('URL can be customized.', async () => {
     reallyCustom: route()(() => 'custom'),
   }
 
-  startServer(routes, 1234, 'custom/route')
+  await server.close()
+  server = startServer(routes, 1234, 'custom/route')
   const simpleServer = api(routes)
 
   const data = client<typeof simpleServer>({ url: 'http://localhost:1234/custom/route' })
@@ -114,8 +115,21 @@ test('URL can be customized.', async () => {
 })
 
 test('Regular page returning client status returned in browser.', async () => {
-  const response = await fetch(url)
+  const response = await fetch(server.url)
   const page = await response.text()
 
   expect(page).toEqual('eipiai running!')
+})
+
+test('Errors when the server is stopped will be handled properly.', async () => {
+  await server.close()
+  expect(server.running()).toBe(false)
+  server = startServer(routes, 1337)
+
+  const data = client<typeof routes>({ url: 'http://localhost:1337/api' })
+
+  expect(await data.getPost(3)).toEqual({ error: false, data: [3] })
+  await server.close()
+  expect(server.running()).toBe(false)
+  expect(await data.getPost(3)).toEqual({ error: true, data: undefined })
 })
