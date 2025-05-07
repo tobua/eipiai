@@ -1,7 +1,7 @@
-import { z as zod } from 'zod'
+import { z } from 'zod'
 import type { Body, JsonSerializable, MappedMethods, Methods, Options, ServerResponse, SubscriptionHandler } from './types'
 
-export const z = zod
+export { z }
 
 const subscribers: Record<string, SubscriptionHandler[]> = {}
 
@@ -34,7 +34,6 @@ export function client<T extends ReturnType<typeof api>>(options?: Options): T {
               'Content-Type': 'application/json',
             },
           })
-
           return await response.json()
         } catch (_error) {
           return { error: true }
@@ -156,7 +155,7 @@ export function socketClient<T extends ReturnType<typeof api>>(
       id: number,
       error: boolean,
       responseData: any[],
-      validation?: zod.ZodIssue[],
+      validation?: z.ZodIssue[],
     ) {
       if (!subscribe) {
         return false
@@ -217,25 +216,25 @@ export function socketClient<T extends ReturnType<typeof api>>(
   })
 }
 
-export function route<T extends zod.ZodTypeAny[]>(...inputs: T) {
+export function route<T extends z.ZodTypeAny[]>(...inputs: T) {
   return (
     handler: (
       options: {
         context: Record<string, any>
         error: (message: string) => void
       },
-      ...args: { [K in keyof T]: zod.infer<T[K]> }
+      ...args: { [K in keyof T]: z.infer<T[K]> }
     ) => any,
   ) => {
     // @ts-ignore zod.tuple working, but types fail...
-    return [handler, zod.tuple(inputs)] as unknown as (...args: { [K in keyof T]: zod.infer<T[K]> }) => ReturnType<typeof handler>
+    return [handler, z.tuple(inputs)] as unknown as (...args: { [K in keyof T]: z.infer<T[K]> }) => ReturnType<typeof handler>
   }
 }
 
-export function subscribe<T extends zod.ZodTypeAny[], U extends any[]>(...output: T) {
+export function subscribe<T extends z.ZodTypeAny[], U extends any[]>(...output: T) {
   // TODO can make function all internal if no filter needed.
   return (filter?: (...values: U) => boolean) => {
     // @ts-ignore zod.tuple working, but types fail...
-    return [filter, zod.tuple(output)] as unknown as [{ [K in keyof T]: zod.infer<T[K]> }, U]
+    return [filter, z.tuple(output)] as unknown as [{ [K in keyof T]: z.infer<T[K]> }, U]
   }
 }

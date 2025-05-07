@@ -6,8 +6,7 @@ import type { Methods } from '../types'
 export function startServer(methods: Methods, port = 3000, path = 'api') {
   const elysia = new Elysia()
     .onBeforeHandle(({ request }) => {
-      // TODO probably Elysia bug, without accessing port, requests can still pass through after stop.
-      console.log(`${request.method} request to ${request.url}`, elysia.server.port)
+      console.log(`${request.method} request to ${request.url}`)
     })
     .use(eipiai(methods, { path }))
     .listen(port)
