@@ -138,7 +138,7 @@ __webpack_require__.d(__webpack_exports__, {
   UX: () => (socketClient)
 });
 
-const z = (/* unused pure expression or super */ null && (zod));
+
 const subscribers = {};
 function api(methods) {
     return methods;
@@ -354,7 +354,7 @@ function route() {
         // @ts-ignore zod.tuple working, but types fail...
         return [
             handler,
-            zod.tuple(inputs)
+            z.tuple(inputs)
         ];
     };
 }
@@ -367,7 +367,7 @@ function subscribe() {
         // @ts-ignore zod.tuple working, but types fail...
         return [
             filter,
-            zod.tuple(output)
+            z.tuple(output)
         ];
     };
 }
@@ -546,7 +546,7 @@ __webpack_require__.O = (result, chunkIds, fn, priority) => {
 })();
 // webpack/runtime/rspack_version
 (() => {
-__webpack_require__.rv = () => ("1.3.7")
+__webpack_require__.rv = () => ("1.3.8")
 })();
 // webpack/runtime/jsonp_chunk_loading
 (() => {
@@ -591,7 +591,7 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.pus
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.3.7";
+__webpack_require__.ruid = "bundler=rspack@1.3.8";
 
 })();
 /************************************************************************/
