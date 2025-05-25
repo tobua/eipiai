@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test'
+import { expectType } from 'ts-expect'
 import { api, client, route, z } from '../index'
 import { startServer } from './server'
 
@@ -98,6 +99,29 @@ test('Route error handler can return custom message.', async () => {
 
   expect(await data.routeError({ id: 1 })).toEqual({ error: 'Custom error 1 with 789.', data: undefined })
   expect(await data.routeError({ id: 2 })).toEqual({ error: 'Custom error 2 with 789.', data: undefined })
+})
+
+test('Input types on the client are inferred properly.', async () => {
+  const data = client<typeof routes>()
+
+  // @ts-expect-error Function types
+  let result = await data.getPost('3')
+  expect(result.validation[0].expected).toBe('number')
+  // @ts-expect-error Nested object types
+  result = await data.updatePost({ content: 5 })
+  expect(result.validation[0].expected).toBe('string')
+  // @ts-expect-error No additional parameters
+  result = await data.listPosts('hey')
+  expect(result.validation[0].code).toBe('too_big')
+})
+
+test('Output types on the client are inferred properly.', async () => {
+  const data = client<typeof routes>()
+
+  expectType<number[]>((await data.listPosts()).data)
+  expectType<number[]>((await data.getPost(4)).data)
+  expectType<string>((await data.updatePost({ content: 'hey' })).data)
+  expectType<number>((await data.multipleArguments(4, 5)).data)
 })
 
 test('URL can be customized.', async () => {

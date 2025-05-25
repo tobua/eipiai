@@ -3,6 +3,8 @@ import type { Body, JsonSerializable, MappedMethods, Methods, Options, ServerRes
 
 export { z }
 
+// TODO integrate early-return to wrap handlers and be called for error()
+
 const subscribers: Record<string, SubscriptionHandler[]> = {}
 
 export function api<T extends Methods>(methods: T): MappedMethods<T> {
@@ -205,6 +207,8 @@ export function socketClient<T extends ReturnType<typeof api>>(
     }
 
     socket.onerror = () => {
+      console.log('ERROR')
+      // TODO handle offline case, client that waits until online again!
       console.error('Failed to start web socket.')
       done({ error: true, client: {} as T, close: () => undefined })
       // Error all open handlers.
@@ -217,17 +221,17 @@ export function socketClient<T extends ReturnType<typeof api>>(
 }
 
 export function route<T extends z.ZodTypeAny[]>(...inputs: T) {
-  return (
+  return <R>(
     handler: (
       options: {
         context: Record<string, any>
         error: (message: string) => void
       },
       ...args: { [K in keyof T]: z.infer<T[K]> }
-    ) => any,
+    ) => R,
   ) => {
     // @ts-ignore zod.tuple working, but types fail...
-    return [handler, z.tuple(inputs)] as unknown as (...args: { [K in keyof T]: z.infer<T[K]> }) => ReturnType<typeof handler>
+    return [handler, z.tuple(inputs)] as unknown as (...args: { [K in keyof T]: z.infer<T[K]> }) => R
   }
 }
 
