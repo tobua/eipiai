@@ -19,7 +19,7 @@ __webpack_require__.a(module, async function (__webpack_handle_async_dependencie
 const data = (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .client */.Lp)({
     url: 'http://localhost:3001/demo'
 });
-const { client: socket } = await (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .socketClient */.UX)({
+const { client: socket } = await (0,_index__WEBPACK_IMPORTED_MODULE_2__.socketClient)({
     url: 'ws://localhost:3002/socket-demo'
 });
 const store = (0,epic_state__WEBPACK_IMPORTED_MODULE_3__/* .state */.SB)({
@@ -135,10 +135,12 @@ __webpack_async_result__();
 292: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.d(__webpack_exports__, {
   Lp: () => (client),
-  UX: () => (socketClient)
+  socketClient: () => (socketClient)
 });
+/* ESM import */var zod__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(806);
 
 
+// TODO integrate early-return to wrap handlers and be called for error()
 const subscribers = {};
 function api(methods) {
     return methods;
@@ -330,6 +332,8 @@ function socketClient(options) {
             }
         }
         socket.onerror = ()=>{
+            console.log('ERROR');
+            // TODO handle offline case, client that waits until online again!
             console.error('Failed to start web socket.');
             done({
                 error: true,
@@ -546,7 +550,7 @@ __webpack_require__.O = (result, chunkIds, fn, priority) => {
 })();
 // webpack/runtime/rspack_version
 (() => {
-__webpack_require__.rv = () => ("1.3.8")
+__webpack_require__.rv = () => ("1.3.11")
 })();
 // webpack/runtime/jsonp_chunk_loading
 (() => {
@@ -591,14 +595,14 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.pus
 })();
 // webpack/runtime/rspack_unique_id
 (() => {
-__webpack_require__.ruid = "bundler=rspack@1.3.8";
+__webpack_require__.ruid = "bundler=rspack@1.3.11";
 
 })();
 /************************************************************************/
 // startup
 // Load entry module and return exports
 // This entry module depends on other loaded chunks and execution need to be delayed
-var __webpack_exports__ = __webpack_require__.O(undefined, ["481"], function() { return __webpack_require__(315) });
+var __webpack_exports__ = __webpack_require__.O(undefined, ["746"], function() { return __webpack_require__(315) });
 __webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 })()
 ;
