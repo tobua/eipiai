@@ -103,3 +103,34 @@ let routes: typeof import('../server/routes').routes | undefined
 
 export const server = client<typeof routes>()
 ```
+
+## Error Handling
+
+Thanks to `early-return` it's possible to handle errors in routes while preserving type inference. There is no need to call `return` as a call to error will stop execution of the route handler and return an error.
+
+```ts
+import { Elysia } from 'elysia'
+import { api, route, z } from 'eipiai'
+import { eipiai, error } from 'eipiai/elysia'
+
+function callGlobalContext() {
+  error('Error without passing context!')
+}
+
+export const routes = api({
+  withError: route(z.boolean())(({ error }, shouldError) => {
+    if (shouldError) {
+      error(`Custom error ${id} with ${uid}.`)
+    }
+    return 123
+  }),
+  withGlobalError: route(z.boolean())((_, shouldError) => {
+    if (shouldError) {
+      callGlobalContext(id)
+    }
+    return 345
+  }),
+})
+
+new Elysia().use(eipiai(routes)).listen(3000)
+```

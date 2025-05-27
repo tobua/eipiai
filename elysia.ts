@@ -1,7 +1,16 @@
+import { early, earlyReturn } from 'early-return'
 import { type Elysia, t } from 'elysia'
 import type { z } from 'zod'
 import { executeHandler, readBody, validateInputs } from './server'
 import type { Body, Handler, Methods } from './types'
+
+let errorHandler: (message: string) => void
+
+export function error(message: string) {
+  if (errorHandler) {
+    errorHandler(message)
+  }
+}
 
 export function eipiai(routes: Methods, options?: { path?: string }) {
   if (typeof routes !== 'object') {
@@ -30,9 +39,17 @@ export function eipiai(routes: Methods, options?: { path?: string }) {
         }
 
         let error: string | boolean = false
-        const data = await executeHandler(handler, body, (message: string) => {
+        const callEarly = (message: string) => {
           error = message
-        })
+          early(message)
+        }
+        errorHandler = callEarly
+        const data = await earlyReturn(() => executeHandler(handler, body, callEarly))
+        errorHandler = undefined
+
+        if (error) {
+          return Response.json({ error })
+        }
 
         return Response.json({ error, data })
       },

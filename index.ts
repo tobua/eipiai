@@ -3,8 +3,6 @@ import type { Body, JsonSerializable, MappedMethods, Methods, Options, ServerRes
 
 export { z }
 
-// TODO integrate early-return to wrap handlers and be called for error()
-
 const subscribers: Record<string, SubscriptionHandler[]> = {}
 
 export function api<T extends Methods>(methods: T): MappedMethods<T> {

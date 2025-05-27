@@ -1,7 +1,12 @@
 import { expect, test } from 'bun:test'
 import { expectType } from 'ts-expect'
+import { error } from '../elysia'
 import { api, client, route, z } from '../index'
 import { startServer } from './server'
+
+function callGlobalContext(id: number) {
+  error(`Custom error ${id}.`)
+}
 
 const methods = {
   listPosts: route()(() => [1, 2, 3]),
@@ -16,7 +21,17 @@ const methods = {
     return uid
   }),
   routeError: route(z.object({ id: z.number() }))(({ context: { uid }, error }, { id }) => {
-    error(`Custom error ${id} with ${uid}.`)
+    if (id < 5) {
+      error(`Custom error ${id} with ${uid}.`)
+    }
+    return 5
+  }),
+  routeAsyncGlobalContext: route(z.number())(async (_, id) => {
+    await new Promise((done) => setTimeout(done, 10))
+    if (id < 5) {
+      callGlobalContext(id)
+    }
+    return id
   }),
   emptyReturn: route()(() => {}),
 }
@@ -116,12 +131,28 @@ test('Input types on the client are inferred properly.', async () => {
 })
 
 test('Output types on the client are inferred properly.', async () => {
-  const data = client<typeof routes>()
+  const data = client<typeof routes>({ context: { uid: '456' } })
 
   expectType<number[]>((await data.listPosts()).data)
   expectType<number[]>((await data.getPost(4)).data)
   expectType<string>((await data.updatePost({ content: 'hey' })).data)
   expectType<number>((await data.multipleArguments(4, 5)).data)
+  const noError = await data.routeError({ id: 9 })
+  expect(noError.error).toBe(false)
+  expect(noError.data).toBe(5)
+  expectType<number>(noError.data)
+  const withError = await data.routeError({ id: 3 })
+  expect(withError.data).toBe(undefined)
+  expect(withError.error).toBe('Custom error 3 with 456.')
+  expectType<string | boolean>(withError.error)
+  const contextNoError = await data.routeAsyncGlobalContext(9)
+  expect(contextNoError.error).toBe(false)
+  expect(contextNoError.data).toBe(9)
+  expectType<number>(contextNoError.data)
+  const contextWithError = await data.routeAsyncGlobalContext(3)
+  expect(contextWithError.data).toBe(undefined)
+  expect(contextWithError.error).toBe('Custom error 3.')
+  expectType<string | boolean>(contextWithError.error)
 })
 
 test('URL can be customized.', async () => {
