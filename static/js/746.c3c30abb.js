@@ -111,7 +111,7 @@ module.exports = debounce;
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  Renderer: () => (/* binding */ Renderer),
+  Th: () => (/* binding */ Renderer),
   Lt: () => (/* binding */ getRoots),
   sY: () => (/* binding */ epic_jsx_render)
 });
@@ -1082,6 +1082,11 @@ function set(parent, property) {
         parent[property] = value;
     };
 }
+function setTo(parent, property, value) {
+    return ()=>{
+        parent[property] = value;
+    };
+}
 function setValue(parent, property, cast) {
     return (event)=>{
         parent[property] = cast ? cast(event.target.value) : event.target.value;
@@ -1118,7 +1123,7 @@ __webpack_require__.d(__webpack_exports__, {
   SB: () => (/* binding */ epic_state_state)
 });
 
-// UNUSED EXPORTS: setValue, observe, list, ref, run, batch, remove, removeAllPlugins, set, plugin, load, toggle
+// UNUSED EXPORTS: setValue, observe, list, setTo, ref, run, batch, remove, removeAllPlugins, set, plugin, load, toggle
 
 // EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 4 modules
 var epic_jsx = __webpack_require__(653);
@@ -1463,8 +1468,8 @@ const renderStateMap = new Map();
 function epic_state_state() {
     let initialObject = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {}, parent = arguments.length > 1 ? arguments[1] : void 0, root = arguments.length > 2 ? arguments[2] : void 0;
     var _Renderer_current, _Renderer_current1;
-    if (((_Renderer_current = epic_jsx.Renderer.current) === null || _Renderer_current === void 0 ? void 0 : _Renderer_current.id) && renderStateMap.has(epic_jsx.Renderer.current.id)) {
-        return renderStateMap.get(epic_jsx.Renderer.current.id);
+    if (((_Renderer_current = epic_jsx/* Renderer,current */.Th.current) === null || _Renderer_current === void 0 ? void 0 : _Renderer_current.id) && renderStateMap.has(epic_jsx/* Renderer,current,id */.Th.current.id)) {
+        return renderStateMap.get(epic_jsx/* Renderer,current,id */.Th.current.id);
     }
     let initialization = true;
     if (typeof initialObject === 'function') {
@@ -1483,7 +1488,7 @@ function epic_state_state() {
     derive(initialObject);
     let plugins = [];
     const baseObject = (0,helper/* createBaseObject */.Kb)(initialObject);
-    const id = Math.floor(Math.random() * 1000000) // Unique identifier for proxy objects.
+    const id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) // Unique identifier for proxy objects.
     ;
     const handler = {
         get (target, property, receiver) {
@@ -1634,8 +1639,8 @@ function epic_state_state() {
         baseObject
     ];
     proxyStateMap.set(proxyObject, proxyState);
-    if ((_Renderer_current1 = epic_jsx.Renderer.current) === null || _Renderer_current1 === void 0 ? void 0 : _Renderer_current1.id) {
-        renderStateMap.set(epic_jsx.Renderer.current.id, proxyObject);
+    if ((_Renderer_current1 = epic_jsx/* Renderer,current */.Th.current) === null || _Renderer_current1 === void 0 ? void 0 : _Renderer_current1.id) {
+        renderStateMap.set(epic_jsx/* Renderer,current,id */.Th.current.id, proxyObject);
     }
     for (const key of Reflect.ownKeys(initialObject)){
         const desc = Object.getOwnPropertyDescriptor(initialObject, key);
@@ -1748,11 +1753,36 @@ __webpack_require__.d(__webpack_exports__, {
 
 
 
+const connections = [];
+function debug() {
+    const lines = [];
+    for (const [index, observedProperties] of connections.entries()){
+        const keys = observedProperties.list();
+        let line = '';
+        line += `connect() ${index} - `;
+        for (const key of keys){
+            line += `State #${key[0]}: `;
+            const properties = [
+                ...key[1].entries()
+            ];
+            for (const property of properties){
+                line += `"${String(property[0])}"`;
+                const components = property[1];
+                for (const component of components){
+                    line += ` ${component.id} `;
+                }
+            }
+        }
+        lines.push(line);
+    }
+    return lines.join('\n');
+}
 const connect = (initialize)=>{
     if (initialize !== 'initialize') {
         (0,_helper__WEBPACK_IMPORTED_MODULE_0__/* .log */.cM)('connect plugin cannot be configured', 'warning');
     }
     const observedProperties = new _types__WEBPACK_IMPORTED_MODULE_1__/* .TupleArrayMap */.i();
+    connections.push(observedProperties);
     return {
         set: (param)=>{
             let { property, parent: { _id: id }, value, previousValue } = param;
@@ -1781,10 +1811,10 @@ const connect = (initialize)=>{
         },
         get: (param)=>{
             let { property, parent: { _id: id } } = param;
-            if (!epic_jsx__WEBPACK_IMPORTED_MODULE_2__.Renderer.current) {
+            if (!epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.Th.current) {
                 return; // Accessed outside a component.
             }
-            const { component } = epic_jsx__WEBPACK_IMPORTED_MODULE_2__.Renderer.current;
+            const { component } = epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.Th.current;
             if (!(component === null || component === void 0 ? void 0 : component.rerender)) {
                 (0,_helper__WEBPACK_IMPORTED_MODULE_0__/* .log */.cM)('Cannot rerender epic-jsx component', 'warning');
                 return;
@@ -1865,6 +1895,11 @@ class TupleArrayMap {
     }
     clear() {
         this.observedProperties.clear();
+    }
+    list() {
+        return [
+            ...this.observedProperties.entries()
+        ];
     }
     constructor(){
         _define_property(this, "observedProperties", new Map());
