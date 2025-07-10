@@ -34,13 +34,13 @@ test('Initializes client and subscribes to various routes.', async () => {
 
   expect(server.subscriptions.subscribePosts).toBeDefined()
 
-  const data = { text: 'Newly added post.' }
+  const newPostData = { text: 'Newly added post.' }
 
-  callSubscription('subscribePosts', data)
+  callSubscription('subscribePosts', newPostData)
   await wait()
 
   expect(subscribePostsMock).toHaveBeenCalled()
-  expect(subscribePostsMock.mock.calls[0][0]).toEqual(data)
+  expect(subscribePostsMock.mock.calls[0][0]).toEqual(newPostData)
 
   const subscribePostMock = mock<(data: number) => void>()
   client.subscribePost(subscribePostMock, 2) // Skipping await

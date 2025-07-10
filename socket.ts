@@ -23,8 +23,8 @@ async function runRoute(body: Body, routes: Methods, ws: any) {
     (message: string) => {
       error = message
     },
-    (...data: any) => {
-      runRoute({ ...body, data }, routes, ws)
+    async (...values: any) => {
+      await runRoute({ ...body, data: values }, routes, ws)
     },
   )
 
@@ -51,17 +51,18 @@ function registerSubscription(message: Body, routes: Methods, ws: any) {
     if (routes[method] && typeof routes[method][0] === 'function' && !routes[method][0](data)) {
       return
     }
-    ws.send({ error: false, data: args, route: method, subscribe: true, id: id } as ServerResponse) // TODO is sending subscribe true.
+    ws.send({ error: false, data: args, route: method, subscribe: true, id } as ServerResponse) // TODO is sending subscribe true.
   }
   handler.id = id
   subscriptions[method].push(handler)
 }
 
 function removeSubscription(message: Body) {
-  if (subscriptions[message.method]) {
-    for (const subscriber of subscriptions[message.method]) {
+  const subscription = subscriptions[message.method]
+  if (subscription) {
+    for (const subscriber of subscription) {
       if (subscriber.id === message.id) {
-        subscriptions[message.method] = subscriptions[message.method]?.filter((subscriber) => subscriber.id !== message.id) || []
+        subscriptions[message.method] = subscriptions[message.method]?.filter((item) => item.id !== message.id) || []
       }
     }
   }
@@ -84,7 +85,7 @@ export function socket(routes: Methods, options?: { path?: string }) {
         id: t.Number(),
       }),
       query: t.Object({}),
-      message(ws, message: Body) {
+      async message(ws, message: Body) {
         if (!app.server?.port) {
           // TODO server already closed this shouldn't be necessary.
           return ws.send({ error: true, id: message.id } as ServerResponse)
@@ -103,7 +104,7 @@ export function socket(routes: Methods, options?: { path?: string }) {
           return ws.send({ error: false, unsubscribe: true, id: message.id } as ServerResponse)
         }
 
-        runRoute(message, routes, ws)
+        await runRoute(message, routes, ws)
       },
     })
 
@@ -115,6 +116,8 @@ export function socket(routes: Methods, options?: { path?: string }) {
 
 export function reset() {
   for (const key in subscriptions) {
-    delete subscriptions[key]
+    if (key) {
+      delete subscriptions[key]
+    }
   }
 }

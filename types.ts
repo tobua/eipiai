@@ -1,4 +1,5 @@
-import { type SafeParseReturnType, type ZodIssue, z } from 'zod'
+import { type ZodSafeParseResult, z } from 'zod'
+import type { $ZodIssue } from 'zod/v4/core'
 
 export type JsonSerializable = string | number | boolean | null | { [key: string]: JsonSerializable } | JsonSerializable[]
 export type Handler = (...args: any[]) => any
@@ -21,7 +22,7 @@ export type ServerResponse = {
   subscribed?: boolean
   subscribe: boolean
   unsubscribe?: boolean
-  validation?: ZodIssue[]
+  validation?: $ZodIssue[]
 }
 export type Options = {
   url?: string
@@ -42,7 +43,7 @@ export type MappedMethods<T extends Methods> = {
     ? (...args: Parameters<T[K]>) => Promise<{
         error: boolean | string
         data: Awaited<ReturnType<T[K]>>
-        validation?: SafeParseReturnType<any, any>
+        validation?: ZodSafeParseResult<any>
         subscribe?: (callback: (data: any) => void) => void
       }>
     : T[K] extends Subscription

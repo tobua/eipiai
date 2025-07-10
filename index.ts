@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import type { Body, JsonSerializable, MappedMethods, Methods, Options, ServerResponse, SubscriptionHandler } from './types'
 
-export { z }
+export { z } from 'zod'
 
 const subscribers: Record<string, SubscriptionHandler[]> = {}
 
@@ -19,14 +19,14 @@ async function getContext(context?: (() => JsonSerializable | Promise<JsonSerial
 
 export function client<T extends ReturnType<typeof api>>(options?: Options): T {
   return new Proxy({} as T, {
-    get(_target, route: string) {
+    get(_target, method: string) {
       return async (...args: JsonSerializable[]) => {
         try {
           const context = await getContext(options?.context)
           const response = await fetch(options?.url ?? 'http://localhost:3000/api', {
             method: 'POST',
             body: JSON.stringify({
-              method: route,
+              method,
               data: args,
               context,
             } as Body),
@@ -49,7 +49,7 @@ function checkIfSubscription(args: JsonSerializable[]): boolean {
 
 async function sendSocketMessage(
   socket: any, // WebSocket will lead to conflict when undici-types installed.
-  route: string,
+  method: string,
   args: JsonSerializable[],
   isSubscription: boolean,
   options?: Options,
@@ -58,7 +58,7 @@ async function sendSocketMessage(
   const context = await getContext(options?.context)
   socket.send(
     JSON.stringify({
-      method: route,
+      method,
       data: isSubscription ? args[1] : args,
       context,
       subscription: isSubscription,
@@ -68,12 +68,12 @@ async function sendSocketMessage(
   return id
 }
 
-function addSubscriber(route: string, id: number, callback: SubscriptionHandler) {
-  if (!subscribers[route]) {
-    subscribers[route] = []
+function addSubscriber(method: string, id: number, callback: SubscriptionHandler) {
+  if (!subscribers[method]) {
+    subscribers[method] = []
   }
   callback.id = id
-  subscribers[route]?.push(callback)
+  subscribers[method]?.push(callback)
 }
 
 const isSocketClosed = (socket: any) => socket.readyState === socket.CLOSED || socket.readyState === socket.CLOSING
@@ -85,17 +85,17 @@ export function socketClient<T extends ReturnType<typeof api>>(
     const socket = new WebSocket(options?.url ?? 'ws://localhost:3000/api')
 
     const handler = new Proxy({} as T, {
-      get(_target, route: string) {
+      get(_target, method: string) {
         return async (...args: JsonSerializable[]) => {
           if (isSocketClosed(socket)) {
             return { error: true }
           }
 
           const isSubscription = checkIfSubscription(args)
-          const id = await sendSocketMessage(socket, route, args, isSubscription, options)
+          const id = await sendSocketMessage(socket, method, args, isSubscription, options)
 
           if (isSubscription) {
-            addSubscriber(route, id, args[0] as unknown as SubscriptionHandler)
+            addSubscriber(method, id, args[0] as unknown as SubscriptionHandler)
           }
 
           return new Promise((innerDone) => {
@@ -114,12 +114,21 @@ export function socketClient<T extends ReturnType<typeof api>>(
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data as string) // Fails with some dependencies without cast.
-      const { subscribed, subscribe, unsubscribe, route, error, data: responseData, id, validation } = data as ServerResponse
+      const {
+        subscribed,
+        subscribe: shouldSubscribe,
+        unsubscribe,
+        route: method,
+        error,
+        data: responseData,
+        id,
+        validation,
+      } = data as ServerResponse
 
-      if (handleSubscriptionConfirmation(id, route, subscribed)) {
+      if (handleSubscriptionConfirmation(id, method, subscribed)) {
         return
       }
-      if (handleSubscriptionNotification(subscribe, route, id, error, responseData, validation)) {
+      if (handleSubscriptionNotification(shouldSubscribe, method, id, error, responseData, validation)) {
         return
       }
       if (handleUnsubscribe(id, unsubscribe)) {
@@ -129,14 +138,14 @@ export function socketClient<T extends ReturnType<typeof api>>(
       handleMessageResponse(data)
     }
 
-    function handleSubscriptionConfirmation(id: number, route: string, subscribed?: boolean) {
+    function handleSubscriptionConfirmation(id: number, method: string, subscribed?: boolean) {
       if (subscribed && openHandlers.has(id)) {
-        const handler = openHandlers.get(id)
-        if (handler) {
-          handler({
+        const openHandler = openHandlers.get(id)
+        if (openHandler) {
+          openHandler({
             error: false,
             unsubscribe: () => {
-              socket.send(JSON.stringify({ id, unsubscribe: true, method: route, context: {}, subscription: false } as Body))
+              socket.send(JSON.stringify({ id, unsubscribe: true, method, context: {}, subscription: false } as Body))
               return new Promise((innerDone) => {
                 openHandlers.set(id, innerDone)
               })
@@ -150,35 +159,35 @@ export function socketClient<T extends ReturnType<typeof api>>(
     }
 
     function handleSubscriptionNotification(
-      subscribe: boolean,
-      route: string,
+      shouldSubscribe: boolean,
+      method: string,
       id: number,
       error: boolean,
       responseData: any[],
       validation?: z.ZodIssue[],
     ) {
-      if (!subscribe) {
+      if (!shouldSubscribe) {
         return false
       }
       // Subscriptions can't technically be erroneous, validation errors however will be shown here.
       if (error) {
-        console.log(`Erroneous subscription response received for ${route}.`)
+        console.log(`Erroneous subscription response received for ${method}.`)
         if (validation) {
           console.log(validation) // TODO pretty print validation messages.
         }
         return true
       }
-      if (!error && subscribers[route]) {
-        notifySubscribers(route, id, responseData)
+      if (!error && subscribers[method]) {
+        notifySubscribers(method, id, responseData)
         return true
       }
     }
 
     function handleUnsubscribe(id: number, unsubscribe = false) {
       if (unsubscribe && openHandlers.has(id)) {
-        const handler = openHandlers.get(id)
-        if (handler) {
-          handler({ error: false })
+        const openHandler = openHandlers.get(id)
+        if (openHandler) {
+          openHandler({ error: false })
           openHandlers.delete(id)
         }
         return true
@@ -186,8 +195,8 @@ export function socketClient<T extends ReturnType<typeof api>>(
       return false
     }
 
-    function notifySubscribers(route: string, id: number, responseData: any[]) {
-      for (const subscriber of subscribers[route] ?? []) {
+    function notifySubscribers(method: string, id: number, responseData: any[]) {
+      for (const subscriber of subscribers[method] ?? []) {
         if (id === subscriber.id) {
           subscriber(responseData.length === 1 ? responseData[0] : responseData)
         }
@@ -196,9 +205,9 @@ export function socketClient<T extends ReturnType<typeof api>>(
 
     function handleMessageResponse(data: any) {
       if (openHandlers.has(data.id)) {
-        const handler = openHandlers.get(data.id)
-        if (handler) {
-          handler({ error: data.error, data: data.data })
+        const openHandler = openHandlers.get(data.id)
+        if (openHandler) {
+          openHandler({ error: data.error, data: data.data })
           openHandlers.delete(data.id)
         }
       }
@@ -208,10 +217,10 @@ export function socketClient<T extends ReturnType<typeof api>>(
       console.log('ERROR')
       // TODO handle offline case, client that waits until online again!
       console.error('Failed to start web socket.')
-      done({ error: true, client: {} as T, close: () => undefined })
+      done({ error: true, client: {} as T, close: () => null })
       // Error all open handlers.
-      openHandlers.forEach((handler, id) => {
-        handler({ error: true })
+      openHandlers.forEach((openHandler, id) => {
+        openHandler({ error: true })
         openHandlers.delete(id)
       })
     }

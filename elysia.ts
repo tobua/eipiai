@@ -4,7 +4,7 @@ import type { z } from 'zod'
 import { executeHandler, readBody, validateInputs } from './server'
 import type { Body, Handler, Methods } from './types'
 
-let errorHandler: (message: string) => void
+let errorHandler: ((message: string) => void) | undefined
 
 export function error(message: string) {
   if (errorHandler) {
@@ -38,20 +38,20 @@ export function eipiai(routes: Methods, options?: { path?: string }) {
           body.data = undefined
         }
 
-        let error: string | boolean = false
+        let errorMessage: string | boolean = false
         const callEarly = (message: string) => {
-          error = message
+          errorMessage = message
           early(message)
         }
         errorHandler = callEarly
         const data = await earlyReturn(() => executeHandler(handler, body, callEarly))
         errorHandler = undefined
 
-        if (error) {
-          return Response.json({ error })
+        if (errorMessage) {
+          return Response.json({ error: errorMessage })
         }
 
-        return Response.json({ error, data })
+        return Response.json({ error: errorMessage, data })
       },
       {
         body: t.Object({

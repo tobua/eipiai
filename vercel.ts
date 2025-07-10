@@ -1,6 +1,6 @@
 import type { z } from 'zod'
 import { executeHandler, readBody, validateInputs } from './server'
-import { type Body, type Handler, type Methods, bodySchema } from './types'
+import { type Body, bodySchema, type Handler, type Methods } from './types'
 
 export function vercel(routes: Methods) {
   async function handler(request: Request) {
@@ -16,7 +16,7 @@ export function vercel(routes: Methods) {
       return Response.json({ error: true })
     }
 
-    const [handler, inputs] = routes[body.method] as unknown as [Handler, z.ZodTypeAny]
+    const [currentHandler, inputs] = routes[body.method] as unknown as [Handler, z.ZodTypeAny]
 
     if (inputs && body.data) {
       const validationResult = validateInputs(body.data, inputs)
@@ -28,7 +28,7 @@ export function vercel(routes: Methods) {
     }
 
     let error: string | boolean = false
-    const data = await executeHandler(handler, body, (message: string) => {
+    const data = await executeHandler(currentHandler, body, (message: string) => {
       error = message
     })
 

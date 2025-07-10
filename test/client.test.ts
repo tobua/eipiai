@@ -1,11 +1,11 @@
 import { expect, test } from 'bun:test'
 import { expectType } from 'ts-expect'
-import { error } from '../elysia'
+import { error as errorHandler } from '../elysia'
 import { api, client, route, z } from '../index'
 import { startServer } from './server'
 
 function callGlobalContext(id: number) {
-  error(`Custom error ${id}.`)
+  errorHandler(`Custom error ${id}.`)
 }
 
 const methods = {
@@ -33,7 +33,7 @@ const methods = {
     }
     return id
   }),
-  emptyReturn: route()(() => {}),
+  emptyReturn: route()(() => null),
 }
 
 const routes = api(methods)
@@ -48,7 +48,7 @@ test('Initializes client and returns data.', async () => {
   // @ts-expect-error
   const { error, validation } = await data.getPost(3, 'non-existent parameter') // TODO bug, second parameter validated as number, should be empty.
   expect(error).toBe(true)
-  expect(validation?.[0].type).toBe('array')
+  expect(validation?.[0].origin).toBe('array')
   expect(validation?.[0].code).toBe('too_big')
   // @ts-expect-error
   const updateResult = await data.updatePost({ content: 4 })
@@ -70,7 +70,7 @@ test('Simple shared variables can be configured.', async () => {
 
 test('Empty return will be shown as success.', async () => {
   const data = client<typeof routes>()
-  expect(await data.emptyReturn()).toEqual({ error: false, data: undefined })
+  expect(await data.emptyReturn()).toEqual({ error: false, data: null })
 })
 
 test('Non existing route will error gracefully.', async () => {
@@ -156,13 +156,12 @@ test('Output types on the client are inferred properly.', async () => {
 })
 
 test('URL can be customized.', async () => {
-  const routes = {
+  const customRoutes = {
     reallyCustom: route()(() => 'custom'),
   }
-
   await server.close()
-  server = startServer(routes, 1234, 'custom/route')
-  const simpleServer = api(routes)
+  server = startServer(customRoutes, 1234, 'custom/route')
+  const simpleServer = api(customRoutes)
 
   const data = client<typeof simpleServer>({ url: 'http://localhost:1234/custom/route' })
 
