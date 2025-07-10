@@ -137,7 +137,6 @@ __webpack_require__.d(__webpack_exports__, {
   Lp: () => (client),
   UX: () => (socketClient)
 });
-/* ESM import */var zod__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(806);
 
 
 const subscribers = {};
@@ -153,7 +152,7 @@ async function getContext(context) {
 }
 function client(options) {
     return new Proxy({}, {
-        get (_target, route) {
+        get (_target, method) {
             return async function() {
                 for(var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++){
                     args[_key] = arguments[_key];
@@ -163,7 +162,7 @@ function client(options) {
                     const response = await fetch((options === null || options === void 0 ? void 0 : options.url) ?? 'http://localhost:3000/api', {
                         method: 'POST',
                         body: JSON.stringify({
-                            method: route,
+                            method,
                             data: args,
                             context
                         }),
@@ -184,11 +183,11 @@ function client(options) {
 function checkIfSubscription(args) {
     return typeof args[0] === 'function';
 }
-async function sendSocketMessage(socket, route, args, isSubscription, options) {
+async function sendSocketMessage(socket, method, args, isSubscription, options) {
     const id = Math.floor(Math.random() * 1000000);
     const context = await getContext(options === null || options === void 0 ? void 0 : options.context);
     socket.send(JSON.stringify({
-        method: route,
+        method,
         data: isSubscription ? args[1] : args,
         context,
         subscription: isSubscription,
@@ -196,20 +195,20 @@ async function sendSocketMessage(socket, route, args, isSubscription, options) {
     }));
     return id;
 }
-function addSubscriber(route, id, callback) {
-    var _subscribers_route;
-    if (!subscribers[route]) {
-        subscribers[route] = [];
+function addSubscriber(method, id, callback) {
+    var _subscribers_method;
+    if (!subscribers[method]) {
+        subscribers[method] = [];
     }
     callback.id = id;
-    (_subscribers_route = subscribers[route]) === null || _subscribers_route === void 0 ? void 0 : _subscribers_route.push(callback);
+    (_subscribers_method = subscribers[method]) === null || _subscribers_method === void 0 ? void 0 : _subscribers_method.push(callback);
 }
 const isSocketClosed = (socket)=>socket.readyState === socket.CLOSED || socket.readyState === socket.CLOSING;
 function socketClient(options) {
     return new Promise((done)=>{
         const socket = new WebSocket((options === null || options === void 0 ? void 0 : options.url) ?? 'ws://localhost:3000/api');
         const handler = new Proxy({}, {
-            get (_target, route) {
+            get (_target, method) {
                 return async function() {
                     for(var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++){
                         args[_key] = arguments[_key];
@@ -220,9 +219,9 @@ function socketClient(options) {
                         };
                     }
                     const isSubscription = checkIfSubscription(args);
-                    const id = await sendSocketMessage(socket, route, args, isSubscription, options);
+                    const id = await sendSocketMessage(socket, method, args, isSubscription, options);
                     if (isSubscription) {
-                        addSubscriber(route, id, args[0]);
+                        addSubscriber(method, id, args[0]);
                     }
                     return new Promise((innerDone)=>{
                         openHandlers.set(id, innerDone);
@@ -242,11 +241,11 @@ function socketClient(options) {
         socket.onmessage = (event)=>{
             const data = JSON.parse(event.data) // Fails with some dependencies without cast.
             ;
-            const { subscribed, subscribe, unsubscribe, route, error, data: responseData, id, validation } = data;
-            if (handleSubscriptionConfirmation(id, route, subscribed)) {
+            const { subscribed, subscribe: shouldSubscribe, unsubscribe, route: method, error, data: responseData, id, validation } = data;
+            if (handleSubscriptionConfirmation(id, method, subscribed)) {
                 return;
             }
-            if (handleSubscriptionNotification(subscribe, route, id, error, responseData, validation)) {
+            if (handleSubscriptionNotification(shouldSubscribe, method, id, error, responseData, validation)) {
                 return;
             }
             if (handleUnsubscribe(id, unsubscribe)) {
@@ -254,17 +253,17 @@ function socketClient(options) {
             }
             handleMessageResponse(data);
         };
-        function handleSubscriptionConfirmation(id, route, subscribed) {
+        function handleSubscriptionConfirmation(id, method, subscribed) {
             if (subscribed && openHandlers.has(id)) {
-                const handler = openHandlers.get(id);
-                if (handler) {
-                    handler({
+                const openHandler = openHandlers.get(id);
+                if (openHandler) {
+                    openHandler({
                         error: false,
                         unsubscribe: ()=>{
                             socket.send(JSON.stringify({
                                 id,
                                 unsubscribe: true,
-                                method: route,
+                                method,
                                 context: {},
                                 subscription: false
                             }));
@@ -279,30 +278,29 @@ function socketClient(options) {
             }
             return false;
         }
-        function handleSubscriptionNotification(subscribe, route, id, error, responseData, validation) {
-            if (!subscribe) {
+        function handleSubscriptionNotification(shouldSubscribe, method, id, error, responseData, validation) {
+            if (!shouldSubscribe) {
                 return false;
             }
             // Subscriptions can't technically be erroneous, validation errors however will be shown here.
             if (error) {
-                console.log(`Erroneous subscription response received for ${route}.`);
+                console.log(`Erroneous subscription response received for ${method}.`);
                 if (validation) {
-                    console.log(validation) // TODO pretty print validation messages.
-                    ;
+                    console.log(validation); // TODO pretty print validation messages.
                 }
                 return true;
             }
-            if (!error && subscribers[route]) {
-                notifySubscribers(route, id, responseData);
+            if (!error && subscribers[method]) {
+                notifySubscribers(method, id, responseData);
                 return true;
             }
         }
         function handleUnsubscribe(id) {
             let unsubscribe = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : false;
             if (unsubscribe && openHandlers.has(id)) {
-                const handler = openHandlers.get(id);
-                if (handler) {
-                    handler({
+                const openHandler = openHandlers.get(id);
+                if (openHandler) {
+                    openHandler({
                         error: false
                     });
                     openHandlers.delete(id);
@@ -311,8 +309,8 @@ function socketClient(options) {
             }
             return false;
         }
-        function notifySubscribers(route, id, responseData) {
-            for (const subscriber of subscribers[route] ?? []){
+        function notifySubscribers(method, id, responseData) {
+            for (const subscriber of subscribers[method] ?? []){
                 if (id === subscriber.id) {
                     subscriber(responseData.length === 1 ? responseData[0] : responseData);
                 }
@@ -320,9 +318,9 @@ function socketClient(options) {
         }
         function handleMessageResponse(data) {
             if (openHandlers.has(data.id)) {
-                const handler = openHandlers.get(data.id);
-                if (handler) {
-                    handler({
+                const openHandler = openHandlers.get(data.id);
+                if (openHandler) {
+                    openHandler({
                         error: data.error,
                         data: data.data
                     });
@@ -337,11 +335,11 @@ function socketClient(options) {
             done({
                 error: true,
                 client: {},
-                close: ()=>undefined
+                close: ()=>null
             });
             // Error all open handlers.
-            openHandlers.forEach((handler, id)=>{
-                handler({
+            openHandlers.forEach((openHandler, id)=>{
+                openHandler({
                     error: true
                 });
                 openHandlers.delete(id);
@@ -547,10 +545,6 @@ __webpack_require__.O = (result, chunkIds, fn, priority) => {
 };
 
 })();
-// webpack/runtime/rspack_version
-(() => {
-__webpack_require__.rv = () => ("1.3.12")
-})();
 // webpack/runtime/jsonp_chunk_loading
 (() => {
 
@@ -592,16 +586,11 @@ chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
 chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 
 })();
-// webpack/runtime/rspack_unique_id
-(() => {
-__webpack_require__.ruid = "bundler=rspack@1.3.12";
-
-})();
 /************************************************************************/
 // startup
 // Load entry module and return exports
 // This entry module depends on other loaded chunks and execution need to be delayed
-var __webpack_exports__ = __webpack_require__.O(undefined, ["746"], function() { return __webpack_require__(315) });
+var __webpack_exports__ = __webpack_require__.O(undefined, ["481"], function() { return __webpack_require__(315) });
 __webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 })()
 ;
