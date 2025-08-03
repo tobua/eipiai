@@ -7,11 +7,12 @@ async function runRoute(body: Body, routes: Methods, ws: any) {
   const [handler, inputs] = routes[body.method] as unknown as [Handler, z.ZodTypeAny]
 
   if (inputs && body.data) {
-    const validationResult = validateInputs(body.data, inputs)
+    const { error: validationError, data: validationResult } = validateInputs(body.data, inputs)
 
-    if (validationResult) {
+    if (validationError) {
       return ws.send({ error: true, validation: validationResult, route: body.method, id: body.id } as ServerResponse)
     }
+    Object.assign(body.data, validationResult)
   } else {
     body.data = undefined
   }

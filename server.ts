@@ -27,8 +27,17 @@ export function validateInputs(data: JsonSerializable, inputs?: ZodTypeAny) {
     return
   }
   const validationResult = inputs.safeParse(data)
+
   if (!validationResult.success) {
-    return validationResult.error.issues
+    return {
+      error: true,
+      data: validationResult.error.issues,
+    }
+  }
+
+  return {
+    error: false,
+    data: validationResult.data,
   }
 }
 

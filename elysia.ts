@@ -30,10 +30,11 @@ export function eipiai(routes: Methods, options?: { path?: string }) {
         const [handler, inputs] = routes[body.method] as unknown as [Handler, z.ZodTypeAny]
 
         if (inputs && body.data) {
-          const validationResult = validateInputs(body.data, inputs)
-          if (validationResult) {
+          const { error: validationError, data: validationResult } = validateInputs(body.data, inputs)
+          if (validationError) {
             return Response.json({ error: true, validation: validationResult })
           }
+          Object.assign(body.data, validationResult)
         } else {
           body.data = undefined
         }

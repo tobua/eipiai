@@ -34,6 +34,29 @@ const methods = {
     return id
   }),
   emptyReturn: route()(() => null),
+  processedValues: route(
+    z.object({
+      number: z.number(),
+      text: z.string(),
+      numberToText: z.preprocess((value: unknown) => {
+        if (typeof value === 'number') {
+          return value.toString()
+        }
+        return value
+      }, z.string()),
+      textToNumber: z.preprocess((value: unknown) => {
+        if (typeof value === 'string') {
+          return Number.parseInt(value, 10)
+        }
+        return value
+      }, z.number()),
+    }),
+  )((_, { number, text, numberToText, textToNumber }) => ({
+    number,
+    text,
+    numberToText,
+    textToNumber,
+  })),
 }
 
 const routes = api(methods)
@@ -128,6 +151,32 @@ test('Input types on the client are inferred properly.', async () => {
   // @ts-expect-error No additional parameters
   result = await data.listPosts('hey')
   expect(result.validation[0].code).toBe('too_big')
+})
+
+test('Processed values are inferred properly.', async () => {
+  const data = client<typeof routes>()
+  const {
+    error,
+    data: result,
+    validation,
+  } = await data.processedValues({
+    number: 1,
+    text: '2',
+    // @ts-expect-error Input types transformed already.
+    numberToText: 3,
+    // @ts-expect-error Input types transformed already.
+    textToNumber: '4',
+  })
+
+  expect(validation).toEqual(undefined)
+  expect(error).toBe(false)
+  expect(result).toEqual({
+    number: 1,
+    text: '2',
+    // Result type changes.
+    numberToText: '3',
+    textToNumber: 4,
+  })
 })
 
 test('Output types on the client are inferred properly.', async () => {
