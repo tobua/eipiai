@@ -116,7 +116,7 @@ __webpack_require__.d(__webpack_exports__, {
   sY: () => (/* binding */ epic_jsx_render)
 });
 
-// UNUSED EXPORTS: jsxDEV, useCallback, cloneElement, unmount, useEffect, jsx, getRoot, default, useState, createElement, debounce, jsxs, Fragment, unmountAll, useMemo, useRef
+// UNUSED EXPORTS: jsxDEV, useCallback, cloneElement, useEffect, jsx, useState, default, createElement, debounce, useMemo, jsxs, Fragment, unmount, unmountAll, useRef, getRoot
 
 // EXTERNAL MODULE: ./node_modules/logua/dist/index.js
 var dist = __webpack_require__(224);
@@ -1119,7 +1119,7 @@ __webpack_require__.d(__webpack_exports__, {
   SB: () => (/* binding */ epic_state_state)
 });
 
-// UNUSED EXPORTS: ref, set, observe, setTo, remove, batch, load, removeAllPlugins, toggle, list, setValue, plugin, run
+// UNUSED EXPORTS: observe, ref, set, setTo, remove, batch, load, removeAllPlugins, toggle, list, setValue, plugin, run
 
 // EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 4 modules
 var epic_jsx = __webpack_require__(653);
