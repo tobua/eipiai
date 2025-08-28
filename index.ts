@@ -54,7 +54,7 @@ async function sendSocketMessage(
   isSubscription: boolean,
   options?: Options,
 ) {
-  const id = Math.floor(Math.random() * 1000000)
+  const id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
   const context = await getContext(options?.context)
   socket.send(
     JSON.stringify({
@@ -227,7 +227,7 @@ export function socketClient<T extends ReturnType<typeof api>>(
   })
 }
 
-export function route<T extends z.ZodTypeAny[]>(...inputs: T) {
+export function route<T extends z.ZodType[]>(...inputs: T) {
   return <R>(
     handler: (
       options: {
@@ -238,11 +238,11 @@ export function route<T extends z.ZodTypeAny[]>(...inputs: T) {
     ) => R,
   ) => {
     // @ts-ignore zod.tuple working, but types fail...
-    return [handler, z.tuple(inputs)] as unknown as (...args: { [K in keyof T]: z.infer<T[K]> }) => R
+    return [handler, z.tuple(inputs)] as unknown as (...args: { [K in keyof T]: z.input<T[K]> }) => R
   }
 }
 
-export function subscribe<T extends z.ZodTypeAny[], U extends any[]>(...output: T) {
+export function subscribe<T extends z.ZodType[], U extends any[]>(...output: T) {
   // TODO can make function all internal if no filter needed.
   return (filter?: (...values: U) => boolean) => {
     // @ts-ignore zod.tuple working, but types fail...

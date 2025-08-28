@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test'
 import { expectType } from 'ts-expect'
+import type { ZodType, infer as zInfer } from 'zod'
 import { error as errorHandler } from '../elysia'
 import { api, client, route, z } from '../index'
 import { startServer } from './server'
@@ -50,13 +51,21 @@ const methods = {
         }
         return value
       }, z.number()),
+      numberCoerced: z.coerce.string(),
+      numberTransformed: z
+        .number()
+        .default(1)
+        .transform((value) => value.toString()),
     }),
-  )((_, { number, text, numberToText, textToNumber }) => ({
+  )((_, { number, text, numberToText, textToNumber, numberCoerced, numberTransformed }) => ({
     number,
     text,
     numberToText,
     textToNumber,
+    numberCoerced,
+    numberTransformed,
   })),
+  coercedRoute: route(z.coerce.string())((_, text) => text),
 }
 
 const routes = api(methods)
@@ -162,11 +171,14 @@ test('Processed values are inferred properly.', async () => {
   } = await data.processedValues({
     number: 1,
     text: '2',
-    // @ts-expect-error Input types transformed already.
     numberToText: 3,
-    // @ts-expect-error Input types transformed already.
     textToNumber: '4',
+    numberCoerced: 5,
+    numberTransformed: 3,
   })
+
+  const coercedResult = await data.coercedRoute(6)
+  expect(coercedResult.data).toBe('6')
 
   expect(validation).toEqual(undefined)
   expect(error).toBe(false)
@@ -176,7 +188,57 @@ test('Processed values are inferred properly.', async () => {
     // Result type changes.
     numberToText: '3',
     textToNumber: 4,
+    numberCoerced: '5',
+    numberTransformed: '3',
   })
+})
+
+test('Parsing zod types.', () => {
+  const schemas = {
+    coerceToString: z.coerce.string(),
+    numberToText: z.preprocess((value: unknown) => {
+      if (typeof value === 'number') {
+        return value.toString()
+      }
+      return value
+    }, z.string()),
+    numberTransformed: z
+      .number()
+      .default(1)
+      .transform((value) => value.toString()),
+    stringTransformed: z
+      .string()
+      .default('1')
+      .transform((value) => Number.parseInt(value, 10)),
+  }
+
+  function parse<T extends ZodType>(input: T, value: z.input<T>): zInfer<T> | 'error' {
+    const result = input.safeParse(value)
+    if (result.success) {
+      return result.data
+    }
+    return 'error'
+  }
+
+  expect(parse(schemas.coerceToString, 5)).toBe('5')
+  expectType<string>(parse(schemas.coerceToString, 5))
+  expect(parse(schemas.coerceToString, '5')).toBe('5')
+  expect(parse(schemas.coerceToString, false)).toBe('false')
+
+  expect(parse(schemas.numberToText, 5)).toBe('5')
+  expect(parse(schemas.numberToText, '5')).toBe('5')
+  expect(parse(schemas.numberToText, false)).toBe('error')
+
+  expect(parse(schemas.numberTransformed, 5)).toBe('5')
+  expectType<string>(parse(schemas.numberTransformed, 5))
+  expect(parse(schemas.numberTransformed, undefined)).toBe('1')
+  // @ts-expect-error
+  expect(parse(schemas.numberTransformed, '5')).toBe('error')
+  // @ts-expect-error
+  expect(parse(schemas.numberTransformed, false)).toBe('error')
+
+  expect(parse(schemas.stringTransformed, '5')).toBe(5)
+  expectType<number | 'error'>(parse(schemas.stringTransformed, '5'))
 })
 
 test('Output types on the client are inferred properly.', async () => {

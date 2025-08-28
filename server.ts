@@ -1,7 +1,12 @@
 import type { ZodTypeAny } from 'zod'
 import type { Body, Handler, JsonSerializable } from './types'
 
-export async function executeHandler(handler: Handler, body: Body, setError: (message: string) => void, update?: (data: any) => void) {
+export async function executeHandler(
+  handler: Handler,
+  body: Body,
+  setError: (message: string) => void,
+  update?: (data: any) => Promise<void>,
+) {
   let data = handler(
     {
       context: body.context ?? {},

@@ -11,15 +11,15 @@
   },
   "dependencies": {
     "early-return": "^0.3.0",
-    "zod": "^4.0.14"
+    "zod": "^4.1.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.1.3",
-    "@types/bun": "^1.2.19",
-    "elysia": "^1.3.8",
+    "@biomejs/biome": "^2.2.2",
+    "@types/bun": "^1.2.21",
+    "elysia": "^1.3.20",
     "ts-expect": "^1.3.0",
     "typescript": "^5.9.2",
-    "zero-configuration": "^1.0.5"
+    "zero-configuration": "^1.0.8"
   },
   "peerDependencies": {
     "elysia": ">= 1"
