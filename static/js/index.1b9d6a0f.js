@@ -1,33 +1,33 @@
 (() => { // webpackBootstrap
 "use strict";
 var __webpack_modules__ = ({
-315: (function (module, __unused_webpack___webpack_exports__, __webpack_require__) {
+106: (function (module, __unused_webpack___webpack_exports__, __webpack_require__) {
 __webpack_require__.a(module, async function (__webpack_handle_async_dependencies__, __webpack_async_result__) { try {
-/* ESM import */var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(314);
-/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(653);
-/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(499);
-/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(622);
-/* ESM import */var epic_state_connect__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(983);
-/* ESM import */var _index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(292);
+/* ESM import */var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(414);
+/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(451);
+/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(576);
+/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(966);
+/* ESM import */var epic_state_connect__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(730);
+/* ESM import */var _index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(416);
 /// <reference types="@rsbuild/core/types" />
 
 
 
 
 
-(0,epic_state__WEBPACK_IMPORTED_MODULE_0__/* .plugin */.BA)(epic_state_connect__WEBPACK_IMPORTED_MODULE_1__/* .connect */.$);
-const data = (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .client */.Lp)({
+(0,epic_state__WEBPACK_IMPORTED_MODULE_0__/* .plugin */.IQ)(epic_state_connect__WEBPACK_IMPORTED_MODULE_1__/* .connect */.N);
+const data = (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .client */.Sn)({
     url: 'http://localhost:3001/demo'
 });
-const { client: socket } = await (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .socketClient */.UX)({
+const { client: socket } = await (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .socketClient */.zS)({
     url: 'ws://localhost:3002/socket-demo'
 });
-const store = (0,epic_state__WEBPACK_IMPORTED_MODULE_3__/* .state */.SB)({
+const store = (0,epic_state__WEBPACK_IMPORTED_MODULE_3__/* .state */.wk)({
     loading: true,
     error: true,
     posts: []
 });
-const socketStore = (0,epic_state__WEBPACK_IMPORTED_MODULE_3__/* .state */.SB)({
+const socketStore = (0,epic_state__WEBPACK_IMPORTED_MODULE_3__/* .state */.wk)({
     loading: true,
     error: true,
     posts: [],
@@ -56,7 +56,7 @@ loadData();
 loadSocketData();
 const InlineCode = (param)=>{
     let { children } = param;
-    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("span", {
+    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("span", {
         style: {
             fontFamily: 'monospace',
             backgroundColor: 'gray',
@@ -69,11 +69,11 @@ const InlineCode = (param)=>{
 };
 function Time() {
     if (socketStore.loadingTime || socketStore.errorTime) {
-        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("p", {
+        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("p", {
             children: "Loading..."
         });
     }
-    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("p", {
+    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("p", {
         children: socketStore.time
     });
 }
@@ -81,30 +81,30 @@ function Posts(param) {
     let { data } = param;
     if (data.loading) {
         // @ts-ignore will be fixed in epic-jsx types.
-        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("p", {
+        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("p", {
             children: "Loading data..."
         });
     }
     if (data.error) {
-        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsxs */.BX)("p", {
+        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsxs */.FD)("p", {
             children: [
                 "Failed to load data. Checkout the repository and run ",
-                /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(InlineCode, {
+                /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(InlineCode, {
                     children: "bun server.ts"
                 }),
                 " inside the ",
-                /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(InlineCode, {
+                /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(InlineCode, {
                     children: "demo"
                 }),
                 " folder."
             ]
         });
     }
-    return data.posts.map((post)=>/*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("p", {
+    return data.posts.map((post)=>/*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("p", {
             children: post.text
         }, post.id));
 }
-(0,epic_jsx__WEBPACK_IMPORTED_MODULE_5__/* .render */.sY)(/*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsxs */.BX)("div", {
+(0,epic_jsx__WEBPACK_IMPORTED_MODULE_5__/* .render */.XX)(/*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsxs */.FD)("div", {
     style: {
         fontFamily: 'sans-serif',
         display: 'flex',
@@ -112,19 +112,19 @@ function Posts(param) {
         flexDirection: 'column'
     },
     children: [
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("h1", {
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("h1", {
             children: "eipiai Demo"
         }),
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(Posts, {
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(Posts, {
             data: store
         }),
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)("h2", {
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("h2", {
             children: "WebSocket Connection"
         }),
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(Posts, {
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(Posts, {
             data: socketStore
         }),
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.tZ)(Time, {})
+        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(Time, {})
     ]
 }));
 
@@ -132,10 +132,10 @@ __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } }, 1);
 
 }),
-292: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+416: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.d(__webpack_exports__, {
-  Lp: () => (client),
-  UX: () => (socketClient)
+  Sn: () => (client),
+  zS: () => (socketClient)
 });
 
 
@@ -184,7 +184,7 @@ function checkIfSubscription(args) {
     return typeof args[0] === 'function';
 }
 async function sendSocketMessage(socket, method, args, isSubscription, options) {
-    const id = Math.floor(Math.random() * 1000000);
+    const id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
     const context = await getContext(options === null || options === void 0 ? void 0 : options.context);
     socket.send(JSON.stringify({
         method,
@@ -551,7 +551,7 @@ __webpack_require__.O = (result, chunkIds, fn, priority) => {
       // object to store loaded and loading chunks
       // undefined = chunk not loaded, null = chunk preloaded/prefetched
       // [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
-      var installedChunks = {"980": 0,};
+      var installedChunks = {"410": 0,};
       __webpack_require__.O.j = (chunkId) => (installedChunks[chunkId] === 0);
 // install a JSONP callback for chunk loading
 var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
@@ -590,7 +590,7 @@ chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.pus
 // startup
 // Load entry module and return exports
 // This entry module depends on other loaded chunks and execution need to be delayed
-var __webpack_exports__ = __webpack_require__.O(undefined, ["481"], function() { return __webpack_require__(315) });
+var __webpack_exports__ = __webpack_require__.O(undefined, ["325"], function() { return __webpack_require__(106) });
 __webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 })()
 ;

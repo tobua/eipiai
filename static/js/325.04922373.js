@@ -1,5 +1,5 @@
-(self["webpackChunkdemo"] = self["webpackChunkdemo"] || []).push([["481"], {
-296: (function (module) {
+(self["webpackChunkdemo"] = self["webpackChunkdemo"] || []).push([["325"], {
+334: (function (module) {
 function debounce(function_, wait = 100, options = {}) {
 	if (typeof function_ !== 'function') {
 		throw new TypeError(`Expected the first parameter to be a function, got \`${typeof function_}\`.`);
@@ -106,23 +106,23 @@ module.exports = debounce;
 
 
 }),
-653: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+451: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  Th: () => (/* binding */ Renderer),
-  Lt: () => (/* binding */ getRoots),
-  sY: () => (/* binding */ epic_jsx_render)
+  A4: () => (/* binding */ Renderer),
+  ug: () => (/* binding */ getRoots),
+  XX: () => (/* binding */ epic_jsx_render)
 });
 
 // UNUSED EXPORTS: jsxDEV, useCallback, cloneElement, useEffect, jsx, useState, default, createElement, debounce, useMemo, jsxs, Fragment, unmount, unmountAll, useRef, getRoot
 
 // EXTERNAL MODULE: ./node_modules/logua/dist/index.js
-var dist = __webpack_require__(224);
+var dist = __webpack_require__(109);
 ;// CONCATENATED MODULE: ./node_modules/epic-jsx/helper.ts
 
-const log = (0,dist/* .create */.U)('epic-jsx', 'blue');
+const log = (0,dist/* .create */.v)('epic-jsx', 'blue');
 function shallowArrayEqual(first, second) {
     if (first.length !== second.length) {
         return false;
@@ -924,11 +924,11 @@ multipleInstancesWarning();
 
 
 }),
-314: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+414: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  BX: () => (jsxs),
-  tZ: () => (jsx)
+  FD: () => (jsxs),
+  Y: () => (jsx)
 });
 function createTextElement(text) {
     return {
@@ -993,24 +993,24 @@ function cloneElement(element, props) {
 
 
 }),
-514: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+459: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  $N: () => (canProxy),
-  Be: () => (isLeaf),
-  J1: () => (listGetters),
-  Kb: () => (createBaseObject),
-  Kn: () => (isObject),
-  Ph: () => (updateProxyValues),
-  cM: () => (log),
-  d7: () => (needsRegister),
-  fm: () => (newProxy),
-  n4: () => (isSetter),
-  u0: () => (canPolyfill)
+  Gv: () => (isObject),
+  I4: () => (isSetter),
+  N1: () => (newProxy),
+  Oj: () => (updateProxyValues),
+  PS: () => (canProxy),
+  Rl: () => (listGetters),
+  Rm: () => (log),
+  a$: () => (canPolyfill),
+  td: () => (createBaseObject),
+  xe: () => (isLeaf),
+  zi: () => (needsRegister)
 });
-/* ESM import */var logua__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(224);
+/* ESM import */var logua__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(109);
 
-const log = (0,logua__WEBPACK_IMPORTED_MODULE_0__/* .create */.U)('epic-state', 'red');
+const log = (0,logua__WEBPACK_IMPORTED_MODULE_0__/* .create */.v)('epic-state', 'red');
 const isObject = (x)=>typeof x === 'object' && x !== null;
 const listGetters = (input)=>{
     const descriptors = Object.getOwnPropertyDescriptors(input);
@@ -1111,22 +1111,22 @@ function multipleInstancesWarning() {
 
 
 }),
-622: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+966: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  SB: () => (/* binding */ epic_state_state)
+  wk: () => (/* binding */ epic_state_state)
 });
 
 // UNUSED EXPORTS: observe, ref, set, setTo, remove, batch, load, removeAllPlugins, toggle, list, setValue, plugin, run
 
 // EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 4 modules
-var epic_jsx = __webpack_require__(653);
+var epic_jsx = __webpack_require__(451);
 // EXTERNAL MODULE: ./node_modules/epic-state/helper.ts
-var helper = __webpack_require__(514);
+var helper = __webpack_require__(459);
 // EXTERNAL MODULE: ./node_modules/epic-state/plugin.ts
-var epic_state_plugin = __webpack_require__(499);
+var epic_state_plugin = __webpack_require__(576);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/batching.ts
 
 
@@ -1179,7 +1179,7 @@ function schedule(callback) {
 }
 function process(deadline) {
     if (batching.updates.length === 0) {
-        (0,helper/* .log */.cM)('Trying to batch empty updates');
+        (0,helper/* .log */.Rm)('Trying to batch empty updates');
         return;
     }
     let shouldYield = false;
@@ -1188,7 +1188,7 @@ function process(deadline) {
         maxTries -= 1;
         const update = batching.updates.shift();
         if (update) {
-            (0,epic_state_plugin/* .callPlugins */.xv)(update);
+            (0,epic_state_plugin/* .callPlugins */.n0)(update);
             // Filter out already applied updates.
             batching.updates = batching.updates.filter((potentialUpdate)=>potentialUpdate.property !== update.property || potentialUpdate.parent !== update.parent);
         }
@@ -1196,7 +1196,7 @@ function process(deadline) {
         shouldYield = deadline.timeRemaining() < 1;
     }
     if (maxTries === 0) {
-        (0,helper/* .log */.cM)('Ran out of tries at process.', 'warning');
+        (0,helper/* .log */.Rm)('Ran out of tries at process.', 'warning');
     }
     // Continuing to process in next iteration.
     if (batching.updates.length > 0) {
@@ -1410,7 +1410,7 @@ const isTracked = (parent, property)=>{
     }
 };
 function derive(proxy) {
-    const getters = (0,helper/* .listGetters */.J1)(proxy);
+    const getters = (0,helper/* .listGetters */.Rl)(proxy);
     if (Object.keys(getters).length === 0) {
         return proxy;
     }
@@ -1440,7 +1440,7 @@ function derive(proxy) {
 }
 
 // EXTERNAL MODULE: ./node_modules/epic-state/types.ts + 1 modules
-var types = __webpack_require__(341);
+var types = __webpack_require__(117);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/index.ts
  // TODO import should be optional and not required, pass along with connect.
 
@@ -1463,26 +1463,26 @@ const renderStateMap = new Map();
 function epic_state_state() {
     let initialObject = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {}, parent = arguments.length > 1 ? arguments[1] : void 0, root = arguments.length > 2 ? arguments[2] : void 0;
     var _Renderer_current, _Renderer_current1;
-    if (((_Renderer_current = epic_jsx/* .Renderer.current */.Th.current) === null || _Renderer_current === void 0 ? void 0 : _Renderer_current.id) && renderStateMap.has(epic_jsx/* .Renderer.current.id */.Th.current.id)) {
-        return renderStateMap.get(epic_jsx/* .Renderer.current.id */.Th.current.id);
+    if (((_Renderer_current = epic_jsx/* .Renderer.current */.A4.current) === null || _Renderer_current === void 0 ? void 0 : _Renderer_current.id) && renderStateMap.has(epic_jsx/* .Renderer.current.id */.A4.current.id)) {
+        return renderStateMap.get(epic_jsx/* .Renderer.current.id */.A4.current.id);
     }
     let initialization = true;
     if (typeof initialObject === 'function') {
         // biome-ignore lint/style/noParameterAssign: Much easier in this case.
         initialObject = initialObject();
     }
-    if (!(0,helper/* .isObject */.Kn)(initialObject)) {
-        (0,helper/* .log */.cM)('Only objects can be made observable with state()', 'error');
+    if (!(0,helper/* .isObject */.Gv)(initialObject)) {
+        (0,helper/* .log */.Rm)('Only objects can be made observable with state()', 'error');
     }
     if (!parent && Object.hasOwn(initialObject, 'parent')) {
-        (0,helper/* .log */.cM)('"parent" property is reserved on state objects to reference the parent', 'warning');
+        (0,helper/* .log */.Rm)('"parent" property is reserved on state objects to reference the parent', 'warning');
     }
     if (!root && Object.hasOwn(initialObject, 'root')) {
-        (0,helper/* .log */.cM)('"root" property is reserved on state objects to reference the root', 'warning');
+        (0,helper/* .log */.Rm)('"root" property is reserved on state objects to reference the root', 'warning');
     }
     derive(initialObject);
     let plugins = [];
-    const baseObject = (0,helper/* .createBaseObject */.Kb)(initialObject);
+    const baseObject = (0,helper/* .createBaseObject */.td)(initialObject);
     const id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) // Unique identifier for proxy objects.
     ;
     const handler = {
@@ -1512,20 +1512,20 @@ function epic_state_state() {
             }
             const value = Reflect.get(target, property, receiver);
             if (!initialization && typeof value !== 'function') {
-                (0,epic_state_plugin/* .callPlugins */.xv)({
-                    type: types/* .PluginAction.Get */.c.Get,
+                (0,epic_state_plugin/* .callPlugins */.n0)({
+                    type: types/* .PluginAction.Get */.w.Get,
                     target: receiver,
                     initial: true,
                     property,
                     parent: receiver ?? root,
-                    leaf: (0,helper/* .isLeaf */.Be)(value),
+                    leaf: (0,helper/* .isLeaf */.xe)(value),
                     value
                 });
                 track(root ?? receiver, property);
             }
             // Register receiver and property on custom data structures.
             // TODO should only be done on first access.
-            if ((0,helper/* .needsRegister */.d7)(value)) {
+            if ((0,helper/* .needsRegister */.zi)(value)) {
                 ;
                 value._register(receiver ?? root, property);
             }
@@ -1534,7 +1534,7 @@ function epic_state_state() {
         // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Difficult to fix, central part of the application.
         set (target, property, value, receiver) {
             if (property === 'parent' || property === 'root' || !initialization && property === 'plugin') {
-                (0,helper/* .log */.cM)(`"${property}" is reserved an cannot be changed`, 'warning');
+                (0,helper/* .log */.Rm)(`"${property}" is reserved an cannot be changed`, 'warning');
                 return false;
             }
             const previousValue = Reflect.get(target, property, receiver) // Reflect skips other traps.
@@ -1566,9 +1566,9 @@ function epic_state_state() {
                     if (typeof after === 'function') {
                         after(nextValue);
                     }
-                } else if (!proxyStateMap.has(value) && (0,helper/* .canProxy */.$N)(value, refSet)) {
+                } else if (!proxyStateMap.has(value) && (0,helper/* .canProxy */.PS)(value, refSet)) {
                     nextValue = epic_state_state(value, receiver, root ?? receiver);
-                } else if ((0,helper/* .canPolyfill */.u0)(value)) {
+                } else if ((0,helper/* .canPolyfill */.a$)(value)) {
                     // TODO Necessary that Map or Set cannot be root?
                     if (value instanceof Map) {
                         nextValue = objectMap(epic_state_state, value, parent, root ?? receiver);
@@ -1583,10 +1583,10 @@ function epic_state_state() {
             }
             // Call setters and getters on existing proxy.
             if (!initialization && typeof value === 'object' && typeof previousValue === 'object' && !Array.isArray(value)) {
-                (0,helper/* .updateProxyValues */.Ph)(previousValue, value);
+                (0,helper/* .updateProxyValues */.Oj)(previousValue, value);
                 return true;
             }
-            if (previousValue === undefined && !(0,helper/* .isSetter */.n4)(target, property)) {
+            if (previousValue === undefined && !(0,helper/* .isSetter */.I4)(target, property)) {
                 Object.defineProperty(target, property, {
                     value: nextValue,
                     writable: true,
@@ -1598,14 +1598,14 @@ function epic_state_state() {
             if (!initialization) {
                 isTracked(root ?? receiver, property); // Mark changed values as "dirty" before plugins (rerenders).
                 scheduleUpdate({
-                    type: types/* .PluginAction.Set */.c.Set,
+                    type: types/* .PluginAction.Set */.w.Set,
                     target: receiver,
                     initial: true,
                     property,
                     parent: receiver ?? root,
                     value,
                     previousValue,
-                    leaf: (0,helper/* .isLeaf */.Be)(value)
+                    leaf: (0,helper/* .isLeaf */.xe)(value)
                 });
             }
             return true;
@@ -1616,7 +1616,7 @@ function epic_state_state() {
             if (deleted) {
                 // TODO no receiver, no parent access?
                 scheduleUpdate({
-                    type: types/* .PluginAction.Delete */.c.Delete,
+                    type: types/* .PluginAction.Delete */.w.Delete,
                     target: target,
                     initial: true,
                     property,
@@ -1628,13 +1628,13 @@ function epic_state_state() {
             return deleted;
         }
     };
-    const proxyObject = (0,helper/* .newProxy */.fm)(baseObject, handler);
+    const proxyObject = (0,helper/* .newProxy */.N1)(baseObject, handler);
     const proxyState = [
         baseObject
     ];
     proxyStateMap.set(proxyObject, proxyState);
-    if ((_Renderer_current1 = epic_jsx/* .Renderer.current */.Th.current) === null || _Renderer_current1 === void 0 ? void 0 : _Renderer_current1.id) {
-        renderStateMap.set(epic_jsx/* .Renderer.current.id */.Th.current.id, proxyObject);
+    if ((_Renderer_current1 = epic_jsx/* .Renderer.current */.A4.current) === null || _Renderer_current1 === void 0 ? void 0 : _Renderer_current1.id) {
+        renderStateMap.set(epic_jsx/* .Renderer.current.id */.A4.current.id, proxyObject);
     }
     for (const key of Reflect.ownKeys(initialObject)){
         const desc = Object.getOwnPropertyDescriptor(initialObject, key);
@@ -1649,7 +1649,7 @@ function epic_state_state() {
         Object.defineProperty(baseObject, key, desc);
     }
     // @ts-ignore
-    plugins = (0,epic_state_plugin/* .initializePlugins */.bP)(proxyObject, initialObject.plugin);
+    plugins = (0,epic_state_plugin/* .initializePlugins */.pI)(proxyObject, initialObject.plugin);
     initialization = false;
     return proxyObject;
 }
@@ -1667,14 +1667,14 @@ function remove(proxyObject) {
 
 
 }),
-499: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+576: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  BA: () => (plugin),
-  bP: () => (initializePlugins),
-  xv: () => (callPlugins)
+  IQ: () => (plugin),
+  n0: () => (callPlugins),
+  pI: () => (initializePlugins)
 });
-/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(341);
+/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(117);
 
 const globalPlugins = [];
 function initializePlugins(state, plugin) {
@@ -1694,7 +1694,7 @@ function callPlugins(param) {
     if (target._plugin) {
         for (const item of target._plugin){
             const plugin = item[type];
-            if (plugin && (item.all || options.leaf || type === _types__WEBPACK_IMPORTED_MODULE_0__/* .PluginAction.Delete */.c.Delete)) {
+            if (plugin && (item.all || options.leaf || type === _types__WEBPACK_IMPORTED_MODULE_0__/* .PluginAction.Delete */.w.Delete)) {
                 // @ts-ignore Apply can also be used on arrow functions to override the this.
                 plugin.call(item, options);
             }
@@ -1715,7 +1715,7 @@ function callPlugins(param) {
     // Global plugins.
     for (const item of globalPlugins){
         const plugin = item[type];
-        if (plugin && (item.all || options.leaf || type === _types__WEBPACK_IMPORTED_MODULE_0__/* .PluginAction.Delete */.c.Delete)) {
+        if (plugin && (item.all || options.leaf || type === _types__WEBPACK_IMPORTED_MODULE_0__/* .PluginAction.Delete */.w.Delete)) {
             // @ts-ignore
             plugin.call(item, options);
         }
@@ -1736,14 +1736,14 @@ function removeAllPlugins() {
 
 
 }),
-983: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+730: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  $: () => (connect)
+  N: () => (connect)
 });
-/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(653);
-/* ESM import */var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(514);
-/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(341);
+/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(451);
+/* ESM import */var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(459);
+/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(117);
 
 
 
@@ -1773,9 +1773,9 @@ function debug() {
 }
 const connect = (initialize)=>{
     if (initialize !== 'initialize') {
-        (0,_helper__WEBPACK_IMPORTED_MODULE_0__/* .log */.cM)('connect plugin cannot be configured', 'warning');
+        (0,_helper__WEBPACK_IMPORTED_MODULE_0__/* .log */.Rm)('connect plugin cannot be configured', 'warning');
     }
-    const observedProperties = new _types__WEBPACK_IMPORTED_MODULE_1__/* .TupleArrayMap */.i();
+    const observedProperties = new _types__WEBPACK_IMPORTED_MODULE_1__/* .TupleArrayMap */.g();
     connections.push(observedProperties);
     return {
         set: (param)=>{
@@ -1800,16 +1800,16 @@ const connect = (initialize)=>{
                 }
             }
             // TODO This will trigger a rerender, probably better to add an interface specific to this.
-            (0,epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .getRoots */.Lt)();
+            (0,epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .getRoots */.ug)();
         },
         get: (param)=>{
             let { property, parent: { _id: id } } = param;
-            if (!epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.Th.current) {
+            if (!epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.A4.current) {
                 return; // Accessed outside a component.
             }
-            const { component } = epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.Th.current;
+            const { component } = epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.A4.current;
             if (!(component === null || component === void 0 ? void 0 : component.rerender)) {
-                (0,_helper__WEBPACK_IMPORTED_MODULE_0__/* .log */.cM)('Cannot rerender epic-jsx component', 'warning');
+                (0,_helper__WEBPACK_IMPORTED_MODULE_0__/* .log */.Rm)('Cannot rerender epic-jsx component', 'warning');
                 return;
             }
             // Register rerender on current component.
@@ -1831,13 +1831,13 @@ const connect = (initialize)=>{
 
 
 }),
-341: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+117: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  c: () => (/* binding */ types_PluginAction),
-  i: () => (/* binding */ TupleArrayMap)
+  w: () => (/* binding */ types_PluginAction),
+  g: () => (/* binding */ TupleArrayMap)
 });
 
 ;// CONCATENATED MODULE: ./node_modules/@swc/helpers/esm/_define_property.js
@@ -1901,12 +1901,12 @@ class TupleArrayMap {
 
 
 }),
-224: (function (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+109: (function (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
-  U: () => (create)
+  v: () => (create)
 });
-/* ESM import */var debounce__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(296);
+/* ESM import */var debounce__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(334);
 // index.ts
 
 
