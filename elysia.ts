@@ -1,7 +1,7 @@
 import { early, earlyReturn } from 'early-return'
 import { type Elysia, t } from 'elysia'
 import type { z } from 'zod'
-import { executeHandler, readBody, validateInputs } from './server'
+import { executeHandler, validateInputs } from './server'
 import type { Body, Handler, Methods } from './types'
 
 let errorHandler: ((message: string) => void) | undefined
@@ -20,8 +20,8 @@ export function eipiai(routes: Methods, options?: { path?: string }) {
   return (eri: Elysia) => {
     const app = eri.post(
       options?.path ?? 'api',
-      async function post(request: Request) {
-        const body = (await readBody(request)) as Body
+      async ({ body: rawBody }) => {
+        const body = rawBody as Body
 
         if (!(body.method && Object.hasOwn(routes, body.method))) {
           return Response.json({ error: true })

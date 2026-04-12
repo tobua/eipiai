@@ -1,4 +1,4 @@
-import type { ZodTypeAny } from 'zod'
+import type { ZodType } from 'zod'
 import type { Body, Handler, JsonSerializable } from './types'
 
 export async function executeHandler(
@@ -27,9 +27,9 @@ export async function executeHandler(
   return data
 }
 
-export function validateInputs(data: JsonSerializable, inputs?: ZodTypeAny) {
+export function validateInputs(data: JsonSerializable, inputs?: ZodType) {
   if (!inputs) {
-    return
+    return { error: true, data: undefined }
   }
   const validationResult = inputs.safeParse(data)
 
@@ -44,11 +44,4 @@ export function validateInputs(data: JsonSerializable, inputs?: ZodTypeAny) {
     error: false,
     data: validationResult.data,
   }
-}
-
-// biome-ignore lint/correctness/noUndeclaredVariables: Injected by runtime.
-const isLocal = typeof Bun !== 'undefined'
-
-export async function readBody(request: Request) {
-  return isLocal ? request.body : await new Response(request.body).json()
 }

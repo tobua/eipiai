@@ -88,7 +88,7 @@ export function socketClient<T extends ReturnType<typeof api>>(
       get(_target, method: string) {
         return async (...args: JsonSerializable[]) => {
           if (isSocketClosed(socket)) {
-            return { error: true }
+            return { error: true, data: undefined }
           }
 
           const isSubscription = checkIfSubscription(args)
@@ -213,16 +213,24 @@ export function socketClient<T extends ReturnType<typeof api>>(
       }
     }
 
+    function flushOpenHandlers() {
+      for (const openHandler of openHandlers.values()) {
+        openHandler({ error: true, data: undefined })
+      }
+      openHandlers.clear()
+    }
+
+    socket.onclose = () => {
+      flushOpenHandlers()
+    }
+
     socket.onerror = () => {
       console.log('ERROR')
       // TODO handle offline case, client that waits until online again!
       console.error('Failed to start web socket.')
       done({ error: true, client: {} as T, close: () => null })
       // Error all open handlers.
-      openHandlers.forEach((openHandler, id) => {
-        openHandler({ error: true })
-        openHandlers.delete(id)
-      })
+      flushOpenHandlers()
     }
   })
 }

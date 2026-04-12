@@ -13,7 +13,11 @@ export function startServer(methods: Methods, port = 3000, path = 'api') {
 
   const url = `${elysia.server.url.toString()}${path}`
   console.log(`Server running on ${url}!`)
-  return { url, close: () => elysia.stop(), running: () => elysia.server?.port !== undefined }
+  return {
+    url,
+    close: () => elysia.stop(true),
+    running: () => elysia.server?.port !== undefined,
+  }
 }
 
 export function startWebsocketServer(methods: Methods, port = 3000, path = 'api') {
@@ -22,5 +26,10 @@ export function startWebsocketServer(methods: Methods, port = 3000, path = 'api'
 
   const url = new URL(path, `ws://localhost:${port}`).toString()
   console.log(`Websocket running on ${url}!`)
-  return { url, subscriptions, close: () => elysia.stop(), running: () => elysia.server?.port !== undefined }
+  return {
+    url,
+    subscriptions,
+    close: () => elysia.stop(true),
+    running: () => elysia.server?.port !== undefined,
+  }
 }
