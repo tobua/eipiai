@@ -1,33 +1,33 @@
-(() => { // webpackBootstrap
+(() => {
 "use strict";
 var __webpack_modules__ = ({
-106: (function (module, __unused_webpack___webpack_exports__, __webpack_require__) {
-__webpack_require__.a(module, async function (__webpack_handle_async_dependencies__, __webpack_async_result__) { try {
-/* ESM import */var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(414);
-/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(451);
-/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(576);
-/* ESM import */var epic_state__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(966);
-/* ESM import */var epic_state_connect__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(730);
-/* ESM import */var _index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(416);
+257(module, __unused_rspack___webpack_exports__, __webpack_require__) {
+__webpack_require__.a(module, async function (__rspack_load_async_deps, __rspack_async_done) { try {
+/* import */ var react_jsx_runtime__rspack_import_4 = __webpack_require__(731);
+/* import */ var epic_jsx__rspack_import_5 = __webpack_require__(510);
+/* import */ var epic_state__rspack_import_0 = __webpack_require__(739);
+/* import */ var epic_state__rspack_import_3 = __webpack_require__(979);
+/* import */ var epic_state_connect__rspack_import_1 = __webpack_require__(599);
+/* import */ var _index__rspack_import_2 = __webpack_require__(551);
+
 /// <reference types="@rsbuild/core/types" />
 
 
 
 
-
-(0,epic_state__WEBPACK_IMPORTED_MODULE_0__/* .plugin */.IQ)(epic_state_connect__WEBPACK_IMPORTED_MODULE_1__/* .connect */.N);
-const data = (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .client */.Sn)({
+(0,epic_state__rspack_import_0/* .plugin */.IQ)(epic_state_connect__rspack_import_1/* .connect */.N);
+const data = (0,_index__rspack_import_2/* .client */.Sn)({
     url: 'http://localhost:3001/demo'
 });
-const { client: socket } = await (0,_index__WEBPACK_IMPORTED_MODULE_2__/* .socketClient */.zS)({
+const { client: socket } = await (0,_index__rspack_import_2/* .socketClient */.zS)({
     url: 'ws://localhost:3002/socket-demo'
 });
-const store = (0,epic_state__WEBPACK_IMPORTED_MODULE_3__/* .state */.wk)({
+const store = (0,epic_state__rspack_import_3/* .state */.wk)({
     loading: true,
     error: true,
     posts: []
 });
-const socketStore = (0,epic_state__WEBPACK_IMPORTED_MODULE_3__/* .state */.wk)({
+const socketStore = (0,epic_state__rspack_import_3/* .state */.wk)({
     loading: true,
     error: true,
     posts: [],
@@ -56,7 +56,7 @@ loadData();
 loadSocketData();
 const InlineCode = (param)=>{
     let { children } = param;
-    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("span", {
+    return /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)("span", {
         style: {
             fontFamily: 'monospace',
             backgroundColor: 'gray',
@@ -69,11 +69,11 @@ const InlineCode = (param)=>{
 };
 function Time() {
     if (socketStore.loadingTime || socketStore.errorTime) {
-        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("p", {
+        return /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)("p", {
             children: "Loading..."
         });
     }
-    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("p", {
+    return /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)("p", {
         children: socketStore.time
     });
 }
@@ -81,30 +81,30 @@ function Posts(param) {
     let { data } = param;
     if (data.loading) {
         // @ts-ignore will be fixed in epic-jsx types.
-        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("p", {
+        return /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)("p", {
             children: "Loading data..."
         });
     }
     if (data.error) {
-        return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsxs */.FD)("p", {
+        return /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsxs */.FD)("p", {
             children: [
                 "Failed to load data. Checkout the repository and run ",
-                /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(InlineCode, {
+                /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)(InlineCode, {
                     children: "bun server.ts"
                 }),
                 " inside the ",
-                /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(InlineCode, {
+                /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)(InlineCode, {
                     children: "demo"
                 }),
                 " folder."
             ]
         });
     }
-    return data.posts.map((post)=>/*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("p", {
+    return data.posts.map((post)=>/*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)("p", {
             children: post.text
         }, post.id));
 }
-(0,epic_jsx__WEBPACK_IMPORTED_MODULE_5__/* .render */.XX)(/*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsxs */.FD)("div", {
+(0,epic_jsx__rspack_import_5/* .render */.XX)(/*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsxs */.FD)("div", {
     style: {
         fontFamily: 'sans-serif',
         display: 'flex',
@@ -112,27 +112,27 @@ function Posts(param) {
         flexDirection: 'column'
     },
     children: [
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("h1", {
+        /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)("h1", {
             children: "eipiai Demo"
         }),
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(Posts, {
+        /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)(Posts, {
             data: store
         }),
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)("h2", {
+        /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)("h2", {
             children: "WebSocket Connection"
         }),
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(Posts, {
+        /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)(Posts, {
             data: socketStore
         }),
-        /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__/* .jsx */.Y)(Time, {})
+        /*#__PURE__*/ (0,react_jsx_runtime__rspack_import_4/* .jsx */.Y)(Time, {})
     ]
 }));
 
-__webpack_async_result__();
-} catch(e) { __webpack_async_result__(e); } }, 1);
+__rspack_async_done();
+} catch(e) { __rspack_async_done(e); } }, 1);
 
-}),
-416: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+},
+551(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
 __webpack_require__.d(__webpack_exports__, {
   Sn: () => (client),
   zS: () => (socketClient)
@@ -215,7 +215,8 @@ function socketClient(options) {
                     }
                     if (isSocketClosed(socket)) {
                         return {
-                            error: true
+                            error: true,
+                            data: undefined
                         };
                     }
                     const isSubscription = checkIfSubscription(args);
@@ -328,6 +329,18 @@ function socketClient(options) {
                 }
             }
         }
+        function flushOpenHandlers() {
+            for (const openHandler of openHandlers.values()){
+                openHandler({
+                    error: true,
+                    data: undefined
+                });
+            }
+            openHandlers.clear();
+        }
+        socket.onclose = ()=>{
+            flushOpenHandlers();
+        };
         socket.onerror = ()=>{
             console.log('ERROR');
             // TODO handle offline case, client that waits until online again!
@@ -338,12 +351,7 @@ function socketClient(options) {
                 close: ()=>null
             });
             // Error all open handlers.
-            openHandlers.forEach((openHandler, id)=>{
-                openHandler({
-                    error: true
-                });
-                openHandlers.delete(id);
-            });
+            flushOpenHandlers();
         };
     });
 }
@@ -374,10 +382,9 @@ function subscribe() {
 }
 
 
-}),
+},
 
 });
-/************************************************************************/
 // The module cache
 var __webpack_module_cache__ = {};
 
@@ -404,19 +411,14 @@ return module.exports;
 // expose the modules object (__webpack_modules__)
 __webpack_require__.m = __webpack_modules__;
 
-/************************************************************************/
 // webpack/runtime/async_module
 (() => {
-var webpackQueues =
-	typeof Symbol === "function"
-		? Symbol("webpack queues")
-		: "__webpack_queues__";
-var webpackExports =
-	typeof Symbol === "function"
-		? Symbol("webpack exports")
-		: "__webpack_exports__";
-var webpackError =
-	typeof Symbol === "function" ? Symbol("webpack error") : "__webpack_error__";
+var hasSymbol = typeof Symbol === "function";
+var rspackQueues = hasSymbol ? Symbol("rspack queues") : "__rspack_queues";
+var rspackExports = __webpack_require__.aE = hasSymbol ? Symbol("rspack exports") : "__webpack_exports__";
+var rspackError = hasSymbol ? Symbol("rspack error") : "__rspack_error";
+var rspackDone = hasSymbol ? Symbol("rspack done") : "__rspack_done";
+var rspackDefer = __webpack_require__.zS = hasSymbol ? Symbol("rspack defer") : "__rspack_defer";
 var resolveQueue = (queue) => {
   if (queue && queue.d < 1) {
     queue.d = 1;
@@ -427,25 +429,41 @@ var resolveQueue = (queue) => {
 var wrapDeps = (deps) => {
 	return deps.map((dep) => {
 		if (dep !== null && typeof dep === "object") {
-			if (dep[webpackQueues]) return dep;
+			if(!dep[rspackQueues] && dep[rspackDefer]) {
+				var asyncDeps = dep[rspackDefer];
+				var hasUnresolvedAsyncSubgraph = asyncDeps.some((id) => {
+					var cache = __webpack_module_cache__[id];
+					return !cache || cache[rspackDone] === false;
+				});
+				if (hasUnresolvedAsyncSubgraph) {
+					var d = dep;
+					dep = {
+						then(callback) {
+							Promise.all(asyncDeps.map(__webpack_require__)).then(() => (callback(d)))
+						}
+					};
+				} else return dep;
+			}
+			if (dep[rspackQueues]) return dep;
 			if (dep.then) {
 				var queue = [];
 				queue.d = 0;
 				dep.then((r) => {
-					obj[webpackExports] = r;
+					obj[rspackExports] = r;
 					resolveQueue(queue);
 				},(e) => {
-					obj[webpackError] = e;
+					obj[rspackError] = e;
 					resolveQueue(queue);
 				});
 				var obj = {};
-				obj[webpackQueues] = (fn) => (fn(queue));
+				obj[rspackDefer] = false;
+				obj[rspackQueues] = (fn) => (fn(queue));
 				return obj;
 			}
 		}
 		var ret = {};
-		ret[webpackQueues] = function() {};
-		ret[webpackExports] = dep;
+		ret[rspackQueues] = () => {};
+		ret[rspackExports] = dep;
 		return ret;
 	});
 };
@@ -461,26 +479,29 @@ __webpack_require__.a = (module, body, hasAwait) => {
 		reject = rej;
 		outerResolve = resolve;
 	});
-	promise[webpackExports] = exports;
-	promise[webpackQueues] = (fn) => { queue && fn(queue), depQueues.forEach(fn), promise["catch"](function() {}); };
+	promise[rspackExports] = exports;
+	promise[rspackQueues] = (fn) => { queue && fn(queue), depQueues.forEach(fn), promise["catch"](() => {}); };
 	module.exports = promise;
-	body((deps) => {
+	var handle = (deps) => {
 		currentDeps = wrapDeps(deps);
 		var fn;
 		var getResult = () => {
 			return currentDeps.map((d) => {
-				if (d[webpackError]) throw d[webpackError];
-				return d[webpackExports];
+				if(d[rspackDefer]) return d;
+				if (d[rspackError]) throw d[rspackError];
+				return d[rspackExports];
 			});
 		}
 		var promise = new Promise((resolve) => {
 			fn = () => (resolve(getResult));
 			fn.r = 0;
 			var fnQueue = (q) => (q !== queue && !depQueues.has(q) && (depQueues.add(q), q && !q.d && (fn.r++, q.push(fn))));
-			currentDeps.map((dep) => (dep[webpackQueues](fnQueue)));
+			currentDeps.map((dep) => (dep[rspackDefer] || dep[rspackQueues](fnQueue)));
 		});
 		return fn.r ? promise : getResult();
-	}, (err) => ((err ? reject(promise[webpackError] = err) : outerResolve(exports)), resolveQueue(queue)));
+	};
+	var done = (err) => ((err ? reject(promise[rspackError] = err) : outerResolve(exports)), resolveQueue(queue), promise[rspackDone] = true);
+	body(handle, done);
 	queue && queue.d < 0 && (queue.d = 0);
 };
 })();
@@ -493,17 +514,6 @@ __webpack_require__.d = (exports, definition) => {
         }
     }
 };
-})();
-// webpack/runtime/global
-(() => {
-__webpack_require__.g = (() => {
-	if (typeof globalThis === 'object') return globalThis;
-	try {
-		return this || new Function('return this')();
-	} catch (e) {
-		if (typeof window === 'object') return window;
-	}
-})();
 })();
 // webpack/runtime/has_own_property
 (() => {
@@ -554,7 +564,7 @@ __webpack_require__.O = (result, chunkIds, fn, priority) => {
       var installedChunks = {"410": 0,};
       __webpack_require__.O.j = (chunkId) => (installedChunks[chunkId] === 0);
 // install a JSONP callback for chunk loading
-var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
+var __rspack_jsonp = (parentChunkLoadingFunction, data) => {
 	var [chunkIds, moreModules, runtime] = data;
 	// add "moreModules" to the modules object,
 	// then flag all "chunkIds" as loaded and fire callback
@@ -578,19 +588,20 @@ var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
 		}
 		installedChunks[chunkId] = 0;
 	}
+	
 	return __webpack_require__.O(result);
+	
 };
 
 var chunkLoadingGlobal = self["webpackChunkdemo"] = self["webpackChunkdemo"] || [];
-chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
-chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
+chunkLoadingGlobal.forEach(__rspack_jsonp.bind(null, 0));
+chunkLoadingGlobal.push = __rspack_jsonp.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 
 })();
-/************************************************************************/
 // startup
 // Load entry module and return exports
 // This entry module depends on other loaded chunks and execution need to be delayed
-var __webpack_exports__ = __webpack_require__.O(undefined, ["325"], function() { return __webpack_require__(106) });
+var __webpack_exports__ = __webpack_require__.O(undefined, ["136"], () => __webpack_require__(257));
 __webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 })()
 ;

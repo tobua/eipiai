@@ -1,5 +1,5 @@
-(self["webpackChunkdemo"] = self["webpackChunkdemo"] || []).push([["325"], {
-334: (function (module) {
+(self["webpackChunkdemo"] = self["webpackChunkdemo"] || []).push([["136"], {
+334(module) {
 function debounce(function_, wait = 100, options = {}) {
 	if (typeof function_ !== 'function') {
 		throw new TypeError(`Expected the first parameter to be a function, got \`${typeof function_}\`.`);
@@ -105,24 +105,194 @@ module.exports.debounce = debounce;
 module.exports = debounce;
 
 
-}),
-451: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+},
+71(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  A4: () => (/* binding */ Renderer),
-  ug: () => (/* binding */ getRoots),
-  XX: () => (/* binding */ epic_jsx_render)
+  a0: () => (/* binding */ createComponent),
+  Mo: () => (/* binding */ updateFiber),
+  Hr: () => (/* binding */ createRoot),
+  qF: () => (/* binding */ addFiber)
 });
 
-// UNUSED EXPORTS: jsxDEV, useCallback, cloneElement, useEffect, jsx, useState, default, createElement, debounce, useMemo, jsxs, Fragment, unmount, unmountAll, useRef, getRoot
+// UNUSED EXPORTS: createRerenderRoot
 
-// EXTERNAL MODULE: ./node_modules/logua/dist/index.js
-var dist = __webpack_require__(109);
-;// CONCATENATED MODULE: ./node_modules/epic-jsx/helper.ts
+// EXTERNAL MODULE: ./node_modules/epic-jsx/helper.ts
+var helper = __webpack_require__(336);
+// EXTERNAL MODULE: ./node_modules/@swc/helpers/esm/_define_property.js
+var _define_property = __webpack_require__(467);
+;// CONCATENATED MODULE: ./node_modules/epic-jsx/types.ts
 
-const log = (0,dist/* .create */.v)('epic-jsx', 'blue');
+var types_Change = /*#__PURE__*/ function(Change) {
+    Change[Change["Update"] = 0] = "Update";
+    Change[Change["Add"] = 1] = "Add";
+    Change[Change["Delete"] = 2] = "Delete";
+    return Change;
+}({});
+// TODO fiber should be typed as well with T to pass to Component.
+class types_Fiber {
+    print() {
+        // `Root <${container.tagName.toLowerCase()}>`
+        const type = this.type;
+        if (type === 'TEXT_ELEMENT') {
+            return `"${this.props.nodeValue}"`;
+        }
+        return `${typeof type === 'function' ? type.name : type}${this.printProps(this.props)}`;
+    }
+    printProps(props) {
+        if (typeof props !== 'object') {
+            return '';
+        }
+        const { children: _children, ...filtered } = props;
+        if (Object.keys(filtered).length === 0) {
+            return '';
+        }
+        return ` ${JSON.stringify(filtered)}`;
+    }
+    constructor(options){
+        (0,_define_property._)(this, "id", void 0);
+        (0,_define_property._)(this, "type", void 0);
+        (0,_define_property._)(this, "child", void 0);
+        (0,_define_property._)(this, "sibling", void 0);
+        (0,_define_property._)(this, "parent", void 0);
+        (0,_define_property._)(this, "native", void 0);
+        (0,_define_property._)(this, "props", void 0);
+        (0,_define_property._)(this, "hooks", void 0);
+        (0,_define_property._)(this, "component", void 0);
+        (0,_define_property._)(this, "previous", void 0);
+        (0,_define_property._)(this, "change", void 0);
+        (0,_define_property._)(this, "unmount", void 0);
+        (0,_define_property._)(this, "svg", void 0);
+        (0,_define_property._)(this, "endListener", void 0); // ComponentListener<T>
+        Object.assign(this, options);
+    }
+}
+
+;// CONCATENATED MODULE: ./node_modules/epic-jsx/component.ts
+
+
+function rerender(context, fiber) {
+    fiber.sibling = undefined;
+    fiber.previous = fiber;
+    context.pending.push(fiber);
+}
+function createComponent(param) {
+    let { fiber, context } = param;
+    const isFirstRender = !fiber.id;
+    // TODO id in fiber shouldn't be optional, assign during creation.
+    if (!fiber.id) {
+        var _fiber_previous;
+        fiber.id = ((_fiber_previous = fiber.previous) === null || _fiber_previous === void 0 ? void 0 : _fiber_previous.id) ?? Math.floor(Math.random() * 1000000);
+    }
+    const data = {
+        component: {
+            id: fiber.id,
+            root: fiber,
+            context,
+            rerender: ()=>rerender(context, fiber),
+            // TODO implement and test ref clearing on rerenders.
+            ref: (0,helper/* .createRef */._3)(),
+            each (callback) {
+                context.afterListeners.push(()=>callback.call(fiber.component));
+            },
+            once (callback) {
+                if (isFirstRender) {
+                    context.afterListeners.push(()=>callback.call(fiber.component));
+                }
+            },
+            after (callback) {
+                (0,helper/* .log */.Rm)('this.after() lifecycle is deprecated, use this.once() or this.each()', 'warning');
+                if (isFirstRender) {
+                    context.afterListeners.push(()=>callback.call(fiber.component));
+                }
+            },
+            end (callback) {
+                fiber.endListener = ()=>callback.call(fiber.component);
+            },
+            plugin (plugins) {
+                for (const plugin of plugins){
+                    if (plugin) {
+                        data.pluginResult = plugin;
+                        throw new Error('plugin') // early-return approach.
+                        ;
+                    }
+                }
+            },
+            state: undefined,
+            print () {
+                const type = String(typeof fiber.type === 'function' ? fiber.type.name : fiber.type);
+                return `${type} #${fiber.id}`;
+            }
+        },
+        pluginResult: undefined
+    };
+    return data;
+}
+function addFiber(current, element, previous) {
+    return new types_Fiber({
+        props: element.props,
+        type: element.type,
+        parent: current,
+        hooks: typeof element.type === 'function' ? previous ? previous.hooks : [] : undefined,
+        svg: current.svg || element.type === 'svg',
+        change: (/* inlined export .Change.Add */1)
+    });
+}
+function updateFiber(current, previous, element) {
+    return new types_Fiber({
+        props: element === null || element === void 0 ? void 0 : element.props,
+        type: previous.type,
+        native: previous.native,
+        parent: current,
+        hooks: previous.hooks,
+        previous,
+        svg: previous.svg || previous.type === 'svg',
+        change: (/* inlined export .Change.Update */0)
+    });
+}
+function createRerenderRoot(current) {
+    return new Fiber({
+        props: current.props,
+        type: current.type,
+        native: current.native,
+        parent: current.parent,
+        hooks: [],
+        previous: current
+    });
+}
+function createRoot(container, element, unmount) {
+    return new types_Fiber({
+        props: {
+            children: [
+                element
+            ]
+        },
+        native: container,
+        unmount: ()=>unmount(container),
+        print () {
+            return `Root <${container.tagName.toLowerCase()}>`;
+        }
+    });
+}
+
+
+},
+336(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
+"use strict";
+__webpack_require__.d(__webpack_exports__, {
+  Rm: () => (log),
+  Sc: () => (sizeStyleProperties),
+  VM: () => (convertSvgPropsToDashCase),
+  _: () => (schedule),
+  _3: () => (createRef),
+  d8: () => (possibleStandardNames),
+  lC: () => (multipleInstancesWarning)
+});
+/* import */ var logua__rspack_import_0 = __webpack_require__(477);
+
+const log = (0,logua__rspack_import_0/* .create */.v)('epic-jsx', 'blue');
 function shallowArrayEqual(first, second) {
     if (first.length !== second.length) {
         return false;
@@ -213,10 +383,10 @@ function multipleInstancesWarning() {
         return;
     }
     // Ensure plugin is only loaded once from a single source (will not work properly otherwise).
-    if (typeof __webpack_require__.g.__epicJsx !== 'undefined') {
+    if (typeof globalThis.__epicJsx !== 'undefined') {
         log('Multiple instances of epic-jsx have been loaded, plugin might not work as expected', 'warning');
     } else {
-        __webpack_require__.g.__epicJsx = true;
+        globalThis.__epicJsx = true;
     }
 }
 function createRef() {
@@ -349,499 +519,525 @@ const sizeStyleProperties = [
     'rowGap',
     'columnGap'
 ];
-
-;// CONCATENATED MODULE: ./node_modules/epic-jsx/types.ts
-var types_Change = /*#__PURE__*/ function(Change) {
-    Change[Change["Update"] = 0] = "Update";
-    Change[Change["Add"] = 1] = "Add";
-    Change[Change["Delete"] = 2] = "Delete";
-    return Change;
-}({});
-
-;// CONCATENATED MODULE: ./node_modules/epic-jsx/browser.ts
-
-
-function startsWithSizeProperty(propertyName) {
-    return sizeStyleProperties.some((prop)=>propertyName.startsWith(prop));
-}
-function convertStylesToPixels(styleObject) {
-    const convertedStyles = {};
-    for(const key in styleObject){
-        if (Object.hasOwn(styleObject, key)) {
-            const value = styleObject[key];
-            if (typeof value === 'number' && startsWithSizeProperty(key)) {
-                convertedStyles[key] = `${value}px`;
-            } else {
-                convertedStyles[key] = value;
-            }
-        }
-    }
-    return convertedStyles;
-}
-const isEvent = (key)=>key.startsWith('on');
-const isProperty = (key)=>key !== 'children' && !isEvent(key);
-const isNew = (prev, next)=>(key)=>prev[key] !== next[key];
-const isGone = (_, next)=>(key)=>!(key in next);
-// Listeners on new props might not have reference equality, so they need to be stored on assignment.
-const eventListeners = new Map();
-function updateNativeElement(element) {
-    let previousProps = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {}, nextProps = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : {};
-    // Remove old or changed event listeners
-    // biome-ignore lint/complexity/noForEach: Chained expression.
-    Object.keys(previousProps).filter(isEvent).filter((key)=>!(key in nextProps) || isNew(previousProps, nextProps)(key)).forEach((name)=>{
-        var _eventListeners_get;
-        const eventType = name.toLowerCase().substring(2) // Remove the "on" from onClick.
-        ;
-        const previousHandler = (_eventListeners_get = eventListeners.get(element)) === null || _eventListeners_get === void 0 ? void 0 : _eventListeners_get.get(eventType);
-        if (previousHandler) {
-            element.removeEventListener(eventType, previousHandler);
-        }
-    });
-    // Remove old properties
-    // biome-ignore lint/complexity/noForEach: Chained expression.
-    Object.keys(previousProps).filter(isProperty).filter(isGone(previousProps, nextProps)).forEach((name)=>{
-        // @ts-ignore Filtered for valid properties, maybe more checks necessary.
-        element[name] = '';
-    });
-    // Set new or changed properties
-    // biome-ignore lint/complexity/noForEach: Chained expression.
-    Object.keys(nextProps).filter(isProperty).filter(isNew(previousProps, nextProps)).forEach((name)=>{
-        if (name === 'ref' && typeof nextProps[name] === 'object') {
-            nextProps[name].current = element;
-            return;
-        }
-        if (name === 'ref' && typeof nextProps[name] === 'string') {
-            return;
-        }
-        if (name === 'value') {
-            ;
-            element.value = nextProps[name];
-            return;
-        }
-        if (typeof element.setAttribute === 'function') {
-            if (name === 'style') {
-                Object.assign(element.style, convertStylesToPixels(nextProps[name]));
-            } else {
-                ;
-                element.setAttribute(name, nextProps[name]);
-            }
-        } else {
-            // @ts-ignore Filtered for valid properties, maybe more checks necessary.
-            element[name] = nextProps[name];
-        }
-    });
-    // Add event listeners
-    // biome-ignore lint/complexity/noForEach: Chained expression.
-    Object.keys(nextProps).filter(isEvent).filter(isNew(previousProps, nextProps)).forEach((name)=>{
-        var _eventListeners_get;
-        const eventType = name.toLowerCase().substring(2);
-        element.addEventListener(eventType, nextProps[name]);
-        if (!eventListeners.has(element)) {
-            eventListeners.set(element, new Map());
-        }
-        (_eventListeners_get = eventListeners.get(element)) === null || _eventListeners_get === void 0 ? void 0 : _eventListeners_get.set(eventType, nextProps[name]);
-    });
-}
-function mapLegacyProps(fiber) {
-    if (Object.hasOwn(fiber.props, 'className')) {
-        if (Object.hasOwn(fiber.props, 'class')) {
-            fiber.props.class = `${fiber.props.class} ${fiber.props.className}`;
-        } else {
-            fiber.props.class = fiber.props.className;
-        }
-        fiber.props.className = undefined;
-    }
-}
-function addRefs(fiber, component) {
-    var _fiber_props, _fiber_props1;
-    // Add refs to component.
-    if (((_fiber_props = fiber.props) === null || _fiber_props === void 0 ? void 0 : _fiber_props.id) && fiber.native && component) {
-        component.ref.addRef(fiber.props.id, {
-            tag: fiber.native.tagName.toLowerCase(),
-            native: fiber.native
-        });
-    }
-    if (((_fiber_props1 = fiber.props) === null || _fiber_props1 === void 0 ? void 0 : _fiber_props1.ref) && fiber.native && component) {
-        component.ref.addRef(fiber.props.ref, {
-            tag: fiber.native.tagName.toLowerCase(),
-            native: fiber.native
-        });
-    }
-}
-function findNativeParent(fiber) {
-    let parent = fiber.parent;
-    let maxTries = 500;
-    while(!(parent === null || parent === void 0 ? void 0 : parent.native) && (parent === null || parent === void 0 ? void 0 : parent.parent) && maxTries > 0){
-        maxTries -= 1;
-        parent = parent.parent;
-    }
-    if (maxTries === 0) {
-        log('Ran out of tries finding native parent.', 'warning');
-    }
-    return parent;
-}
-function createNativeElement(fiber) {
-    if (!fiber.type) {
-        return undefined // Ignore fragments.
-        ;
-    }
-    mapLegacyProps(fiber);
-    let element;
-    if (fiber.type === 'TEXT_ELEMENT') {
-        element = document.createTextNode('');
-    } else if (fiber.svg) {
-        convertSvgPropsToDashCase(fiber.props);
-        // Necessary to properly render SVG elements, createElement will not work.
-        element = document.createElementNS('http://www.w3.org/2000/svg', fiber.type);
-    } else {
-        element = document.createElement(fiber.type);
-    }
-    updateNativeElement(element, {}, fiber.props);
-    return element;
-}
-function commitDeletion(fiber, nativeParent) {
-    if (fiber.native) {
-        try {
-            if (nativeParent.isConnected && fiber.native.isConnected) {
-                nativeParent.removeChild(fiber.native);
-            } else if (fiber.native.isConnected) {
-                log("Trying to remove a node from a parent that's no longer in the DOM", 'warning');
-            } else {
-                log("Trying to remove a node that's no longer in the DOM", 'warning');
-            }
-        } catch (_error) {
-            // NOTE indicates a plugin error, should not happen.
-            log('Failed to remove node from the DOM', 'warning');
-        }
-        fiber.change = undefined;
-    } else if (fiber.child) {
-        // Avoid another delete when visiting though siblings.
-        fiber.change = undefined;
-        fiber.child.change = types_Change.Delete;
-        commitDeletion(fiber.child, nativeParent);
-    }
-}
-function commitFiber(fiber, currentComponent) {
-    var _fiber_component;
-    if (!fiber) {
-        return;
-    }
-    if ((_fiber_component = fiber.component) === null || _fiber_component === void 0 ? void 0 : _fiber_component.root) {
-        var _fiber_component1;
-        // biome-ignore lint/style/noParameterAssign: Much easier in this case.
-        currentComponent = (_fiber_component1 = fiber.component) === null || _fiber_component1 === void 0 ? void 0 : _fiber_component1.root.component;
-    }
-    const parent = findNativeParent(fiber);
-    if (fiber.change === types_Change.Add && fiber.native) {
-        var _parent_native;
-        parent === null || parent === void 0 ? void 0 : (_parent_native = parent.native) === null || _parent_native === void 0 ? void 0 : _parent_native.appendChild(fiber.native);
-    } else if (fiber.change === types_Change.Update && fiber.native) {
-        var _fiber_previous;
-        updateNativeElement(fiber.native, (_fiber_previous = fiber.previous) === null || _fiber_previous === void 0 ? void 0 : _fiber_previous.props, fiber.props);
-    } else if (fiber.change === types_Change.Delete && parent) {
-        if (fiber.native && eventListeners.has(fiber.native)) {
-            eventListeners.delete(fiber.native); // Clean up event listener tracking.
-        }
-        if (parent.native) {
-            commitDeletion(fiber, parent.native);
-        }
-    }
-    addRefs(fiber, currentComponent);
-    if (fiber.child) {
-        commitFiber(fiber.child, currentComponent);
-    }
-    if (fiber.sibling) {
-        commitFiber(fiber.sibling, currentComponent);
-    }
-}
-
-;// CONCATENATED MODULE: ./node_modules/epic-jsx/render.ts
-
-
-
-
-function commit(context, fiber) {
-    for (const fiber of context.deletions){
-        commitFiber(fiber);
-    }
-    context.deletions.length = 0;
-    if (fiber.child) {
-        commitFiber(fiber.child);
-    }
-    // TODO check if dependencies changed.
-    if (Renderer.effects.length > 0) {
-        for (const effect of Renderer.effects){
-            effect();
-        }
-        Renderer.effects.length = 0;
-    }
-}
-function deleteAllFiberSiblings(context, node) {
-    if (!node) {
-        return;
-    }
-    node.change = types_Change.Delete;
-    context.deletions.push(node);
-    if (node === null || node === void 0 ? void 0 : node.sibling) {
-        deleteAllFiberSiblings(context, node.sibling);
-    }
-}
-// Loops flat through all the siblings of the previous child of the node passed.
-function reconcileChildren(context, current) {
-    let children = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
-    var _current_previous;
-    let index = 0;
-    let previous = (_current_previous = current.previous) === null || _current_previous === void 0 ? void 0 : _current_previous.child;
-    let previousSibling;
-    let maxTries = 500;
-    // TODO compare children.length to previous element length.
-    while((index < children.length || previous) && maxTries > 0){
-        maxTries -= 1;
-        const element = children[index];
-        let newFiber;
-        // TODO also compare props.
-        const fragment = element === null || previous === null;
-        const isSameType = !fragment && (element === null || element === void 0 ? void 0 : element.type) === (previous === null || previous === void 0 ? void 0 : previous.type);
-        if (previous && !isSameType) {
-            // Delete the old node and its children when types don't match
-            deleteChildren(context, previous);
-        }
-        if (isSameType && previous) {
-            newFiber = createUpdatedFiber(current, previous, element);
-        } else if (element) {
-            // Create new fiber for different types or new elements
-            newFiber = createNewFiber(current, element, previous);
-        }
-        const item = previous;
-        if (previous) {
-            previous = previous.sibling;
-        }
-        if (index === 0) {
-            current.child = newFiber;
-        } else if (element && previousSibling) {
-            previousSibling.sibling = newFiber;
-        }
-        previousSibling = newFiber;
-        index += 1;
-        // NOTE added to prevent endless loop after state update to component.
-        if (index > children.length) {
-            // Remove additional nodes no longer present in tree.
-            deleteAllFiberSiblings(context, previous ?? item);
-            previous = undefined;
-        }
-    }
-    if (maxTries === 0) {
-        log('Ran out of tries at reconcileChildren.', 'warning');
-    }
-}
-const createUpdatedFiber = (current, previous, element)=>({
-        type: previous.type,
-        props: element === null || element === void 0 ? void 0 : element.props,
-        native: previous.native,
-        parent: current,
-        previous,
-        hooks: previous.hooks,
-        svg: previous.svg || previous.type === 'svg',
-        change: types_Change.Update
-    });
-const createNewFiber = (current, element, previous)=>({
-        type: element.type,
-        props: element.props,
-        native: undefined,
-        parent: current,
-        previous: undefined,
-        hooks: typeof element.type === 'function' ? previous ? previous.hooks : [] : undefined,
-        svg: current.svg || element.type === 'svg',
-        change: types_Change.Add
-    });
-function deleteChildren(context, fiber) {
-    if (fiber.change === types_Change.Delete) {
-        return;
-    }
-    fiber.change = types_Change.Delete;
-    context.deletions.push(fiber);
-    if (fiber.child) {
-        deleteChildren(context, fiber.child);
-    }
-    if (fiber.sibling) {
-        deleteChildren(context, fiber.sibling);
-    }
-}
-function rerender(context, fiber) {
-    fiber.sibling = undefined;
-    fiber.previous = fiber;
-    context.pending.push(fiber);
-}
-function updateFunctionComponent(context, fiber) {
-    if (typeof fiber.type !== 'function') {
-        return;
-    }
-    if (typeof fiber.hooks === 'undefined') {
-        fiber.hooks = [];
-    }
-    const isFirstRender = !fiber.id;
-    let pluginResult;
-    fiber.hooks.length = 0;
-    Renderer.context = context;
-    // TODO id in fiber shouldn't be optional, assign during creation.
-    if (!fiber.id) {
-        var _fiber_previous;
-        fiber.id = ((_fiber_previous = fiber.previous) === null || _fiber_previous === void 0 ? void 0 : _fiber_previous.id) ?? Math.floor(Math.random() * 1000000);
-    }
-    fiber.component = {
-        id: fiber.id,
-        root: fiber,
-        context,
-        rerender: ()=>rerender(context, fiber),
-        // TODO implement and test ref clearing on rerenders.
-        ref: createRef(),
-        each (callback) {
-            context.afterListeners.push(()=>callback.call(fiber.component));
-        },
-        once (callback) {
-            if (isFirstRender) {
-                context.afterListeners.push(()=>callback.call(fiber.component));
-            }
-        },
-        after (callback) {
-            log('this.after() lifecycle is deprecated, use this.once() or this.each()', 'warning');
-            if (isFirstRender) {
-                context.afterListeners.push(()=>callback.call(fiber.component));
-            }
-        },
-        plugin (plugins) {
-            for (const plugin of plugins){
-                if (plugin) {
-                    pluginResult = plugin;
-                    throw new Error('plugin') // early-return approach.
-                    ;
-                }
-            }
-        },
-        state: undefined
-    };
-    Renderer.current = fiber;
-    if (Array.isArray(fiber.props.children) && fiber.props.children.length === 0) {
-        // biome-ignore lint/performance/noDelete: Clean up meaningless props.
-        delete fiber.props.children;
-    }
-    let children = [];
-    try {
-        children = [
-            fiber.type.call(fiber.component, fiber.props)
-        ];
-    } catch (error) {
-        if (error.message === 'plugin' && pluginResult) {
-            children = [
-                pluginResult
-            ];
-        }
-    }
-    Renderer.current = undefined;
-    Renderer.context = undefined;
-    reconcileChildren(context, fiber, children.flat());
-}
-function updateHostComponent(context, fiber) {
-    var _fiber_props;
-    if (!fiber.native) {
-        fiber.native = createNativeElement(fiber);
-    }
-    // Flattening children to make arrays work.
-    reconcileChildren(context, fiber, (_fiber_props = fiber.props) === null || _fiber_props === void 0 ? void 0 : _fiber_props.children.flat());
-}
-function render(context, fiber) {
-    const isFunctionComponent = fiber.type instanceof Function;
-    if (isFunctionComponent) {
-        updateFunctionComponent(context, fiber);
-    } else {
-        updateHostComponent(context, fiber);
-    }
-    if (fiber.child) {
-        return fiber.child;
-    }
-    let nextFiber = fiber;
-    let maxTries = 500;
-    while(nextFiber && maxTries > 0){
-        maxTries -= 1;
-        if (nextFiber.sibling) {
-            return nextFiber.sibling;
-        }
-        nextFiber = nextFiber.parent;
-    }
-    if (maxTries === 0) {
-        log('Ran out of tries at render.', 'warning');
-    }
-    return undefined;
-}
-function process(deadline, context) {
-    if (!context.current && context.pending.length === 0) {
-        log('Trying to process an empty queue');
-        return;
-    }
-    if (!context.current) {
-        context.current = context.pending.shift();
-        if (context.current) {
-            context.rendered.push(context.current); // Rendered state only final when current empty.
-        }
-    }
-    context.afterListeners = [];
-    let shouldYield = false;
-    let maxTries = 5000 // Prevent infinite loop, long lists can take a lot of tries.
-    ;
-    while(context.current && !shouldYield && maxTries > 0){
-        maxTries -= 1;
-        // Render current fiber.
-        context.current = render(context, context.current);
-        // Add next fiber if previous tree finished.
-        if (!context.current && context.pending.length > 0) {
-            context.current = context.pending.shift();
-            if (context.current) {
-                context.rendered.push(context.current);
-            }
-        }
-        // Yield current rendering cycle if out of time.
-        shouldYield = deadline.timeRemaining() < 1;
-    }
-    if (maxTries === 0) {
-        log('Ran out of tries at process.', 'warning');
-    }
-    // Yielded if context.current not empty.
-    if (!context.current && context.rendered.length > 0) {
-        for (const fiber of context.rendered){
-            commit(context, fiber);
-        }
-        if (context.afterListeners) {
-            for (const callback of context.afterListeners){
-                callback.call(null);
-            }
-            context.afterListeners = [];
-        }
-        context.rendered.length = 0;
-    }
-    if (context.current || context.pending.length > 0) {
-        schedule((nextDeadline)=>process(nextDeadline, context));
-    }
-}
-const processNow = (context)=>process({
-        timeRemaining: ()=>99999,
-        didTimeout: false
-    }, context);
-
-;// CONCATENATED MODULE: ./node_modules/epic-jsx/index.ts
-
-
-// biome-ignore lint/style/noNamespaceImport: React compatibility.
-
-
-
-const Renderer = {
-    context: undefined,
-    effects: [],
-    current: undefined
+// MIT License
+// Copyright (c) Meta Platforms, Inc. and affiliates.
+// From https://github.com/facebook/react/blob/main/packages/react-dom-bindings/src/shared/possibleStandardNames.js
+const possibleStandardNames = {
+    // HTML
+    accept: 'accept',
+    acceptcharset: 'acceptCharset',
+    'accept-charset': 'acceptCharset',
+    accesskey: 'accessKey',
+    action: 'action',
+    allowfullscreen: 'allowFullScreen',
+    alt: 'alt',
+    as: 'as',
+    async: 'async',
+    autocapitalize: 'autoCapitalize',
+    autocomplete: 'autoComplete',
+    autocorrect: 'autoCorrect',
+    autofocus: 'autoFocus',
+    autoplay: 'autoPlay',
+    autosave: 'autoSave',
+    capture: 'capture',
+    cellpadding: 'cellPadding',
+    cellspacing: 'cellSpacing',
+    challenge: 'challenge',
+    charset: 'charSet',
+    checked: 'checked',
+    children: 'children',
+    cite: 'cite',
+    class: 'className',
+    classid: 'classID',
+    classname: 'className',
+    cols: 'cols',
+    colspan: 'colSpan',
+    content: 'content',
+    contenteditable: 'contentEditable',
+    contextmenu: 'contextMenu',
+    controls: 'controls',
+    controlslist: 'controlsList',
+    coords: 'coords',
+    crossorigin: 'crossOrigin',
+    dangerouslysetinnerhtml: 'dangerouslySetInnerHTML',
+    data: 'data',
+    datetime: 'dateTime',
+    default: 'default',
+    defaultchecked: 'defaultChecked',
+    defaultvalue: 'defaultValue',
+    defer: 'defer',
+    dir: 'dir',
+    disabled: 'disabled',
+    disablepictureinpicture: 'disablePictureInPicture',
+    disableremoteplayback: 'disableRemotePlayback',
+    download: 'download',
+    draggable: 'draggable',
+    enctype: 'encType',
+    enterkeyhint: 'enterKeyHint',
+    fetchpriority: 'fetchPriority',
+    for: 'htmlFor',
+    form: 'form',
+    formmethod: 'formMethod',
+    formaction: 'formAction',
+    formenctype: 'formEncType',
+    formnovalidate: 'formNoValidate',
+    formtarget: 'formTarget',
+    frameborder: 'frameBorder',
+    headers: 'headers',
+    height: 'height',
+    hidden: 'hidden',
+    high: 'high',
+    href: 'href',
+    hreflang: 'hrefLang',
+    htmlfor: 'htmlFor',
+    httpequiv: 'httpEquiv',
+    'http-equiv': 'httpEquiv',
+    icon: 'icon',
+    id: 'id',
+    imagesizes: 'imageSizes',
+    imagesrcset: 'imageSrcSet',
+    inert: 'inert',
+    innerhtml: 'innerHTML',
+    inputmode: 'inputMode',
+    integrity: 'integrity',
+    is: 'is',
+    itemid: 'itemID',
+    itemprop: 'itemProp',
+    itemref: 'itemRef',
+    itemscope: 'itemScope',
+    itemtype: 'itemType',
+    keyparams: 'keyParams',
+    keytype: 'keyType',
+    kind: 'kind',
+    label: 'label',
+    lang: 'lang',
+    list: 'list',
+    loop: 'loop',
+    low: 'low',
+    manifest: 'manifest',
+    marginwidth: 'marginWidth',
+    marginheight: 'marginHeight',
+    max: 'max',
+    maxlength: 'maxLength',
+    media: 'media',
+    mediagroup: 'mediaGroup',
+    method: 'method',
+    min: 'min',
+    minlength: 'minLength',
+    multiple: 'multiple',
+    muted: 'muted',
+    name: 'name',
+    nomodule: 'noModule',
+    nonce: 'nonce',
+    novalidate: 'noValidate',
+    open: 'open',
+    optimum: 'optimum',
+    pattern: 'pattern',
+    placeholder: 'placeholder',
+    playsinline: 'playsInline',
+    poster: 'poster',
+    preload: 'preload',
+    profile: 'profile',
+    radiogroup: 'radioGroup',
+    readonly: 'readOnly',
+    referrerpolicy: 'referrerPolicy',
+    rel: 'rel',
+    required: 'required',
+    reversed: 'reversed',
+    role: 'role',
+    rows: 'rows',
+    rowspan: 'rowSpan',
+    sandbox: 'sandbox',
+    scope: 'scope',
+    scoped: 'scoped',
+    scrolling: 'scrolling',
+    seamless: 'seamless',
+    selected: 'selected',
+    shape: 'shape',
+    size: 'size',
+    sizes: 'sizes',
+    span: 'span',
+    spellcheck: 'spellCheck',
+    src: 'src',
+    srcdoc: 'srcDoc',
+    srclang: 'srcLang',
+    srcset: 'srcSet',
+    start: 'start',
+    step: 'step',
+    style: 'style',
+    summary: 'summary',
+    tabindex: 'tabIndex',
+    target: 'target',
+    title: 'title',
+    type: 'type',
+    usemap: 'useMap',
+    value: 'value',
+    width: 'width',
+    wmode: 'wmode',
+    wrap: 'wrap',
+    // SVG
+    about: 'about',
+    accentheight: 'accentHeight',
+    'accent-height': 'accentHeight',
+    accumulate: 'accumulate',
+    additive: 'additive',
+    alignmentbaseline: 'alignmentBaseline',
+    'alignment-baseline': 'alignmentBaseline',
+    allowreorder: 'allowReorder',
+    alphabetic: 'alphabetic',
+    amplitude: 'amplitude',
+    arabicform: 'arabicForm',
+    'arabic-form': 'arabicForm',
+    ascent: 'ascent',
+    attributename: 'attributeName',
+    attributetype: 'attributeType',
+    autoreverse: 'autoReverse',
+    azimuth: 'azimuth',
+    basefrequency: 'baseFrequency',
+    baselineshift: 'baselineShift',
+    'baseline-shift': 'baselineShift',
+    baseprofile: 'baseProfile',
+    bbox: 'bbox',
+    begin: 'begin',
+    bias: 'bias',
+    by: 'by',
+    calcmode: 'calcMode',
+    capheight: 'capHeight',
+    'cap-height': 'capHeight',
+    clip: 'clip',
+    clippath: 'clipPath',
+    'clip-path': 'clipPath',
+    clippathunits: 'clipPathUnits',
+    cliprule: 'clipRule',
+    'clip-rule': 'clipRule',
+    color: 'color',
+    colorinterpolation: 'colorInterpolation',
+    'color-interpolation': 'colorInterpolation',
+    colorinterpolationfilters: 'colorInterpolationFilters',
+    'color-interpolation-filters': 'colorInterpolationFilters',
+    colorprofile: 'colorProfile',
+    'color-profile': 'colorProfile',
+    colorrendering: 'colorRendering',
+    'color-rendering': 'colorRendering',
+    contentscripttype: 'contentScriptType',
+    contentstyletype: 'contentStyleType',
+    cursor: 'cursor',
+    cx: 'cx',
+    cy: 'cy',
+    d: 'd',
+    datatype: 'datatype',
+    decelerate: 'decelerate',
+    descent: 'descent',
+    diffuseconstant: 'diffuseConstant',
+    direction: 'direction',
+    display: 'display',
+    divisor: 'divisor',
+    dominantbaseline: 'dominantBaseline',
+    'dominant-baseline': 'dominantBaseline',
+    dur: 'dur',
+    dx: 'dx',
+    dy: 'dy',
+    edgemode: 'edgeMode',
+    elevation: 'elevation',
+    enablebackground: 'enableBackground',
+    'enable-background': 'enableBackground',
+    end: 'end',
+    exponent: 'exponent',
+    externalresourcesrequired: 'externalResourcesRequired',
+    fill: 'fill',
+    fillopacity: 'fillOpacity',
+    'fill-opacity': 'fillOpacity',
+    fillrule: 'fillRule',
+    'fill-rule': 'fillRule',
+    filter: 'filter',
+    filterres: 'filterRes',
+    filterunits: 'filterUnits',
+    floodopacity: 'floodOpacity',
+    'flood-opacity': 'floodOpacity',
+    floodcolor: 'floodColor',
+    'flood-color': 'floodColor',
+    focusable: 'focusable',
+    fontfamily: 'fontFamily',
+    'font-family': 'fontFamily',
+    fontsize: 'fontSize',
+    'font-size': 'fontSize',
+    fontsizeadjust: 'fontSizeAdjust',
+    'font-size-adjust': 'fontSizeAdjust',
+    fontstretch: 'fontStretch',
+    'font-stretch': 'fontStretch',
+    fontstyle: 'fontStyle',
+    'font-style': 'fontStyle',
+    fontvariant: 'fontVariant',
+    'font-variant': 'fontVariant',
+    fontweight: 'fontWeight',
+    'font-weight': 'fontWeight',
+    format: 'format',
+    from: 'from',
+    fx: 'fx',
+    fy: 'fy',
+    g1: 'g1',
+    g2: 'g2',
+    glyphname: 'glyphName',
+    'glyph-name': 'glyphName',
+    glyphorientationhorizontal: 'glyphOrientationHorizontal',
+    'glyph-orientation-horizontal': 'glyphOrientationHorizontal',
+    glyphorientationvertical: 'glyphOrientationVertical',
+    'glyph-orientation-vertical': 'glyphOrientationVertical',
+    glyphref: 'glyphRef',
+    gradienttransform: 'gradientTransform',
+    gradientunits: 'gradientUnits',
+    hanging: 'hanging',
+    horizadvx: 'horizAdvX',
+    'horiz-adv-x': 'horizAdvX',
+    horizoriginx: 'horizOriginX',
+    'horiz-origin-x': 'horizOriginX',
+    ideographic: 'ideographic',
+    imagerendering: 'imageRendering',
+    'image-rendering': 'imageRendering',
+    in2: 'in2',
+    in: 'in',
+    inlist: 'inlist',
+    intercept: 'intercept',
+    k1: 'k1',
+    k2: 'k2',
+    k3: 'k3',
+    k4: 'k4',
+    k: 'k',
+    kernelmatrix: 'kernelMatrix',
+    kernelunitlength: 'kernelUnitLength',
+    kerning: 'kerning',
+    keypoints: 'keyPoints',
+    keysplines: 'keySplines',
+    keytimes: 'keyTimes',
+    lengthadjust: 'lengthAdjust',
+    letterspacing: 'letterSpacing',
+    'letter-spacing': 'letterSpacing',
+    lightingcolor: 'lightingColor',
+    'lighting-color': 'lightingColor',
+    limitingconeangle: 'limitingConeAngle',
+    local: 'local',
+    markerend: 'markerEnd',
+    'marker-end': 'markerEnd',
+    markerheight: 'markerHeight',
+    markermid: 'markerMid',
+    'marker-mid': 'markerMid',
+    markerstart: 'markerStart',
+    'marker-start': 'markerStart',
+    markerunits: 'markerUnits',
+    markerwidth: 'markerWidth',
+    mask: 'mask',
+    maskcontentunits: 'maskContentUnits',
+    maskunits: 'maskUnits',
+    mathematical: 'mathematical',
+    mode: 'mode',
+    numoctaves: 'numOctaves',
+    offset: 'offset',
+    opacity: 'opacity',
+    operator: 'operator',
+    order: 'order',
+    orient: 'orient',
+    orientation: 'orientation',
+    origin: 'origin',
+    overflow: 'overflow',
+    overlineposition: 'overlinePosition',
+    'overline-position': 'overlinePosition',
+    overlinethickness: 'overlineThickness',
+    'overline-thickness': 'overlineThickness',
+    paintorder: 'paintOrder',
+    'paint-order': 'paintOrder',
+    panose1: 'panose1',
+    'panose-1': 'panose1',
+    pathlength: 'pathLength',
+    patterncontentunits: 'patternContentUnits',
+    patterntransform: 'patternTransform',
+    patternunits: 'patternUnits',
+    pointerevents: 'pointerEvents',
+    'pointer-events': 'pointerEvents',
+    points: 'points',
+    pointsatx: 'pointsAtX',
+    pointsaty: 'pointsAtY',
+    pointsatz: 'pointsAtZ',
+    popover: 'popover',
+    popovertarget: 'popoverTarget',
+    popovertargetaction: 'popoverTargetAction',
+    prefix: 'prefix',
+    preservealpha: 'preserveAlpha',
+    preserveaspectratio: 'preserveAspectRatio',
+    primitiveunits: 'primitiveUnits',
+    property: 'property',
+    r: 'r',
+    radius: 'radius',
+    refx: 'refX',
+    refy: 'refY',
+    renderingintent: 'renderingIntent',
+    'rendering-intent': 'renderingIntent',
+    repeatcount: 'repeatCount',
+    repeatdur: 'repeatDur',
+    requiredextensions: 'requiredExtensions',
+    requiredfeatures: 'requiredFeatures',
+    resource: 'resource',
+    restart: 'restart',
+    result: 'result',
+    results: 'results',
+    rotate: 'rotate',
+    rx: 'rx',
+    ry: 'ry',
+    scale: 'scale',
+    security: 'security',
+    seed: 'seed',
+    shaperendering: 'shapeRendering',
+    'shape-rendering': 'shapeRendering',
+    slope: 'slope',
+    spacing: 'spacing',
+    specularconstant: 'specularConstant',
+    specularexponent: 'specularExponent',
+    speed: 'speed',
+    spreadmethod: 'spreadMethod',
+    startoffset: 'startOffset',
+    stddeviation: 'stdDeviation',
+    stemh: 'stemh',
+    stemv: 'stemv',
+    stitchtiles: 'stitchTiles',
+    stopcolor: 'stopColor',
+    'stop-color': 'stopColor',
+    stopopacity: 'stopOpacity',
+    'stop-opacity': 'stopOpacity',
+    strikethroughposition: 'strikethroughPosition',
+    'strikethrough-position': 'strikethroughPosition',
+    strikethroughthickness: 'strikethroughThickness',
+    'strikethrough-thickness': 'strikethroughThickness',
+    string: 'string',
+    stroke: 'stroke',
+    strokedasharray: 'strokeDasharray',
+    'stroke-dasharray': 'strokeDasharray',
+    strokedashoffset: 'strokeDashoffset',
+    'stroke-dashoffset': 'strokeDashoffset',
+    strokelinecap: 'strokeLinecap',
+    'stroke-linecap': 'strokeLinecap',
+    strokelinejoin: 'strokeLinejoin',
+    'stroke-linejoin': 'strokeLinejoin',
+    strokemiterlimit: 'strokeMiterlimit',
+    'stroke-miterlimit': 'strokeMiterlimit',
+    strokewidth: 'strokeWidth',
+    'stroke-width': 'strokeWidth',
+    strokeopacity: 'strokeOpacity',
+    'stroke-opacity': 'strokeOpacity',
+    suppresscontenteditablewarning: 'suppressContentEditableWarning',
+    suppresshydrationwarning: 'suppressHydrationWarning',
+    surfacescale: 'surfaceScale',
+    systemlanguage: 'systemLanguage',
+    tablevalues: 'tableValues',
+    targetx: 'targetX',
+    targety: 'targetY',
+    textanchor: 'textAnchor',
+    'text-anchor': 'textAnchor',
+    textdecoration: 'textDecoration',
+    'text-decoration': 'textDecoration',
+    textlength: 'textLength',
+    textrendering: 'textRendering',
+    'text-rendering': 'textRendering',
+    to: 'to',
+    transform: 'transform',
+    transformorigin: 'transformOrigin',
+    'transform-origin': 'transformOrigin',
+    typeof: 'typeof',
+    u1: 'u1',
+    u2: 'u2',
+    underlineposition: 'underlinePosition',
+    'underline-position': 'underlinePosition',
+    underlinethickness: 'underlineThickness',
+    'underline-thickness': 'underlineThickness',
+    unicode: 'unicode',
+    unicodebidi: 'unicodeBidi',
+    'unicode-bidi': 'unicodeBidi',
+    unicoderange: 'unicodeRange',
+    'unicode-range': 'unicodeRange',
+    unitsperem: 'unitsPerEm',
+    'units-per-em': 'unitsPerEm',
+    unselectable: 'unselectable',
+    valphabetic: 'vAlphabetic',
+    'v-alphabetic': 'vAlphabetic',
+    values: 'values',
+    vectoreffect: 'vectorEffect',
+    'vector-effect': 'vectorEffect',
+    version: 'version',
+    vertadvy: 'vertAdvY',
+    'vert-adv-y': 'vertAdvY',
+    vertoriginx: 'vertOriginX',
+    'vert-origin-x': 'vertOriginX',
+    vertoriginy: 'vertOriginY',
+    'vert-origin-y': 'vertOriginY',
+    vhanging: 'vHanging',
+    'v-hanging': 'vHanging',
+    videographic: 'vIdeographic',
+    'v-ideographic': 'vIdeographic',
+    viewbox: 'viewBox',
+    viewtarget: 'viewTarget',
+    visibility: 'visibility',
+    vmathematical: 'vMathematical',
+    'v-mathematical': 'vMathematical',
+    vocab: 'vocab',
+    widths: 'widths',
+    wordspacing: 'wordSpacing',
+    'word-spacing': 'wordSpacing',
+    writingmode: 'writingMode',
+    'writing-mode': 'writingMode',
+    x1: 'x1',
+    x2: 'x2',
+    x: 'x',
+    xchannelselector: 'xChannelSelector',
+    xheight: 'xHeight',
+    'x-height': 'xHeight',
+    xlinkactuate: 'xlinkActuate',
+    'xlink:actuate': 'xlinkActuate',
+    xlinkarcrole: 'xlinkArcrole',
+    'xlink:arcrole': 'xlinkArcrole',
+    xlinkhref: 'xlinkHref',
+    'xlink:href': 'xlinkHref',
+    xlinkrole: 'xlinkRole',
+    'xlink:role': 'xlinkRole',
+    xlinkshow: 'xlinkShow',
+    'xlink:show': 'xlinkShow',
+    xlinktitle: 'xlinkTitle',
+    'xlink:title': 'xlinkTitle',
+    xlinktype: 'xlinkType',
+    'xlink:type': 'xlinkType',
+    xmlbase: 'xmlBase',
+    'xml:base': 'xmlBase',
+    xmllang: 'xmlLang',
+    'xml:lang': 'xmlLang',
+    xmlns: 'xmlns',
+    'xml:space': 'xmlSpace',
+    xmlnsxlink: 'xmlnsXlink',
+    'xmlns:xlink': 'xmlnsXlink',
+    xmlspace: 'xmlSpace',
+    y1: 'y1',
+    y2: 'y2',
+    y: 'y',
+    ychannelselector: 'yChannelSelector',
+    z: 'z',
+    zoomandpan: 'zoomAndPan'
 };
 
-// biome-ignore lint/style/noDefaultExport: React compatibility.
-/* ESM default export */ const epic_jsx = ((/* unused pure expression or super */ null && (React)));
+
+},
+510(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
+"use strict";
+__webpack_require__.d(__webpack_exports__, {
+  XX: () => (render),
+  ug: () => (getRoots)
+});
+/* import */ var _component__rspack_import_2 = __webpack_require__(71);
+/* import */ var _helper__rspack_import_1 = __webpack_require__(336);
+/* import */ var _render__rspack_import_0 = __webpack_require__(637);
+
+
+
+
+
+
+
+
 const roots = new Map();
 // Imported by regular React runtime, implementation is guess.
 // @ts-ignore
@@ -855,7 +1051,7 @@ const getRoot = function() {
     const context = roots.get(container);
     // Ensure all work has passed.
     if (context && (context.pending.length > 0 || context.rendered.length > 0)) {
-        processNow(context);
+        (0,_render__rspack_import_0/* .processNow */.M0)(context);
     }
     return context;
 };
@@ -866,14 +1062,14 @@ const getRoots = ()=>{
     // Ensure all work has passed.
     for (const context of contexts){
         if (context.pending.length > 0 || context.rendered.length > 0) {
-            processNow(context);
+            (0,_render__rspack_import_0/* .processNow */.M0)(context);
         }
     }
     return contexts;
 };
 const unmount = (container)=>{
     if (!container) {
-        log('Trying to unmount empty container', 'warning');
+        (0,_helper__rspack_import_1/* .log */.Rm)('Trying to unmount empty container', 'warning');
         return;
     }
     container.innerHTML = '';
@@ -883,8 +1079,10 @@ const unmount = (container)=>{
     }
     roots.delete(container);
 };
-const unmountAll = ()=>roots.forEach((_, container)=>unmount(container));
-function epic_jsx_render(element, container) {
+const unmountAll = ()=>roots.forEach((_, container)=>{
+        unmount(container);
+    });
+function render(element, container) {
     if (!container) {
         // biome-ignore lint/style/noParameterAssign: Why wouldn't a method default work?
         container = document.body; // Default assignment in args wouldn't override null.
@@ -894,16 +1092,7 @@ function epic_jsx_render(element, container) {
     } else {
         container.innerHTML = ''; // Always clearing the container first.
     }
-    const root = {
-        native: container,
-        props: {
-            children: [
-                element
-            ]
-        },
-        previous: undefined,
-        unmount: ()=>unmount(container)
-    };
+    const root = (0,_component__rspack_import_2/* .createRoot */.Hr)(container, element, unmount);
     const context = {
         root,
         deletions: [],
@@ -917,14 +1106,14 @@ function epic_jsx_render(element, container) {
     };
     roots.set(container, context);
     context.deletions = [];
-    schedule((deadline)=>process(deadline, context));
+    (0,_helper__rspack_import_1/* .schedule */._)((deadline)=>(0,_render__rspack_import_0/* .process */.eh)(deadline, context));
     return context;
 }
-multipleInstancesWarning();
+(0,_helper__rspack_import_1/* .multipleInstancesWarning */.lC)();
 
 
-}),
-414: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+},
+731(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
   FD: () => (jsxs),
@@ -992,8 +1181,533 @@ function cloneElement(element, props) {
 }
 
 
-}),
-459: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+},
+637(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  A4: () => (/* binding */ Renderer),
+  eh: () => (/* binding */ process),
+  M0: () => (/* binding */ processNow)
+});
+
+// EXTERNAL MODULE: ./node_modules/epic-jsx/helper.ts
+var helper = __webpack_require__(336);
+;// CONCATENATED MODULE: ./node_modules/epic-jsx/browser.ts
+
+
+function startsWithSizeProperty(propertyName) {
+    return helper/* .sizeStyleProperties.some */.Sc.some((prop)=>propertyName.startsWith(prop));
+}
+function convertStylesToPixels(styleObject) {
+    const convertedStyles = {};
+    for(const key in styleObject){
+        if (Object.hasOwn(styleObject, key)) {
+            const value = styleObject[key];
+            if (typeof value === 'number' && startsWithSizeProperty(key)) {
+                convertedStyles[key] = `${value}px`;
+            } else {
+                convertedStyles[key] = value;
+            }
+        }
+    }
+    return convertedStyles;
+}
+function getPropertyValue(property, value) {
+    // Write disabled="disabled", as boolean not supported.
+    if ([
+        'disabled',
+        'checked'
+    ].includes(property)) {
+        return value ? property : undefined;
+    }
+    return value;
+}
+const isEvent = (key)=>key.startsWith('on');
+const isProperty = (key)=>key !== 'children' && !isEvent(key);
+const isNew = (prev, next)=>(key)=>prev[key] !== next[key];
+const isGone = (_, next)=>(key)=>!(key in next);
+// Listeners on new props might not have reference equality, so they need to be stored on assignment.
+const eventListeners = new Map();
+function updateNativeElement(element) {
+    let previousProps = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {}, nextProps = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : {};
+    // Remove old or changed event listeners
+    // biome-ignore lint/complexity/noForEach: Chained expression.
+    Object.keys(previousProps).filter(isEvent).filter((key)=>!(key in nextProps) || isNew(previousProps, nextProps)(key)).forEach((name)=>{
+        var _eventListeners_get;
+        const eventType = name.toLowerCase().substring(2) // Remove the "on" from onClick.
+        ;
+        const previousHandler = (_eventListeners_get = eventListeners.get(element)) === null || _eventListeners_get === void 0 ? void 0 : _eventListeners_get.get(eventType);
+        if (previousHandler) {
+            element.removeEventListener(eventType, previousHandler);
+        }
+    });
+    // Remove old properties
+    // biome-ignore lint/complexity/noForEach: Chained expression.
+    Object.keys(previousProps).filter(isProperty).filter(isGone(previousProps, nextProps)).forEach((name)=>{
+        // @ts-ignore Filtered for valid properties, maybe more checks necessary.
+        element[name] = '';
+    });
+    // Set new or changed properties
+    // biome-ignore lint/complexity/noForEach: Chained expression.
+    Object.keys(nextProps).filter(isProperty).filter(isNew(previousProps, nextProps)).forEach((name)=>{
+        if (name === 'ref' && typeof nextProps[name] === 'object') {
+            nextProps[name].current = element;
+            return;
+        }
+        if (name === 'ref' && typeof nextProps[name] === 'string') {
+            return;
+        }
+        if (name === 'value') {
+            ;
+            element.value = nextProps[name];
+            return;
+        }
+        if (typeof element.setAttribute === 'function') {
+            if (name === 'style') {
+                Object.assign(element.style, convertStylesToPixels(nextProps[name]));
+            } else {
+                const value = getPropertyValue(name, nextProps[name]);
+                if (value !== undefined && (name.toLowerCase() in helper/* .possibleStandardNames */.d8 || name.startsWith('aria-'))) {
+                    ;
+                    element.setAttribute(name, value);
+                }
+            }
+        } else {
+            // @ts-ignore Filtered for valid properties, maybe more checks necessary.
+            element[name] = nextProps[name];
+        }
+    });
+    // Add event listeners
+    // biome-ignore lint/complexity/noForEach: Chained expression.
+    Object.keys(nextProps).filter(isEvent).filter(isNew(previousProps, nextProps)).forEach((name)=>{
+        var _eventListeners_get;
+        const eventType = name.toLowerCase().substring(2);
+        element.addEventListener(eventType, nextProps[name]);
+        if (!eventListeners.has(element)) {
+            eventListeners.set(element, new Map());
+        }
+        (_eventListeners_get = eventListeners.get(element)) === null || _eventListeners_get === void 0 ? void 0 : _eventListeners_get.set(eventType, nextProps[name]);
+    });
+}
+function mapLegacyProps(fiber) {
+    if (Object.hasOwn(fiber.props, 'className')) {
+        if (Object.hasOwn(fiber.props, 'class')) {
+            fiber.props.class = `${fiber.props.class} ${fiber.props.className}`;
+        } else {
+            fiber.props.class = fiber.props.className;
+        }
+        fiber.props.className = undefined;
+    }
+}
+function addRefs(fiber, component) {
+    var _fiber_props, _fiber_props1;
+    // Add refs to component.
+    if (((_fiber_props = fiber.props) === null || _fiber_props === void 0 ? void 0 : _fiber_props.id) && fiber.native && component) {
+        component.ref.addRef(fiber.props.id, {
+            tag: fiber.native.tagName.toLowerCase(),
+            native: fiber.native
+        });
+    }
+    if (((_fiber_props1 = fiber.props) === null || _fiber_props1 === void 0 ? void 0 : _fiber_props1.ref) && fiber.native && component) {
+        component.ref.addRef(fiber.props.ref, {
+            tag: fiber.native.tagName.toLowerCase(),
+            native: fiber.native
+        });
+    }
+}
+function findNativeParent(fiber) {
+    let parent = fiber.parent;
+    let maxTries = 500;
+    while(!(parent === null || parent === void 0 ? void 0 : parent.native) && (parent === null || parent === void 0 ? void 0 : parent.parent) && maxTries > 0){
+        maxTries -= 1;
+        parent = parent.parent;
+    }
+    if (maxTries === 0) {
+        (0,helper/* .log */.Rm)('Ran out of tries finding native parent.', 'warning');
+    }
+    return parent;
+}
+function createNativeElement(fiber) {
+    if (!fiber.type) {
+        return; // Ignore fragments.
+    }
+    mapLegacyProps(fiber);
+    let element;
+    if (fiber.type === 'TEXT_ELEMENT') {
+        element = document.createTextNode('');
+    } else if (fiber.svg) {
+        (0,helper/* .convertSvgPropsToDashCase */.VM)(fiber.props);
+        // Necessary to properly render SVG elements, createElement will not work.
+        element = document.createElementNS('http://www.w3.org/2000/svg', fiber.type);
+    } else {
+        element = document.createElement(fiber.type);
+    }
+    updateNativeElement(element, {}, fiber.props);
+    return element;
+}
+function commitDeletion(fiber, nativeParent) {
+    if (fiber.native) {
+        try {
+            if (nativeParent.isConnected && fiber.native.isConnected) {
+                nativeParent.removeChild(fiber.native);
+            } else if (fiber.native.isConnected) {
+                (0,helper/* .log */.Rm)("Trying to remove a node from a parent that's no longer in the DOM", 'warning');
+            } else {
+                (0,helper/* .log */.Rm)("Trying to remove a node that's no longer in the DOM", 'warning');
+            }
+        } catch (_error) {
+            // NOTE indicates a plugin error, should not happen.
+            (0,helper/* .log */.Rm)('Failed to remove node from the DOM', 'warning');
+        }
+        fiber.change = undefined;
+    } else if (fiber.child) {
+        // Avoid another delete when visiting though siblings.
+        fiber.change = undefined;
+        fiber.child.change = (/* inlined export .Change.Delete */2);
+        commitDeletion(fiber.child, nativeParent);
+    }
+}
+function commitFiber(fiber, currentComponent) {
+    var _fiber_component;
+    if (!fiber) {
+        return;
+    }
+    if ((_fiber_component = fiber.component) === null || _fiber_component === void 0 ? void 0 : _fiber_component.root) {
+        var _fiber_component1;
+        // biome-ignore lint/style/noParameterAssign: Much easier in this case.
+        currentComponent = (_fiber_component1 = fiber.component) === null || _fiber_component1 === void 0 ? void 0 : _fiber_component1.root.component;
+    }
+    const parent = findNativeParent(fiber);
+    if (fiber.change === (/* inlined export .Change.Add */1) && fiber.native) {
+        var _parent_native;
+        parent === null || parent === void 0 ? void 0 : (_parent_native = parent.native) === null || _parent_native === void 0 ? void 0 : _parent_native.appendChild(fiber.native);
+    } else if (fiber.change === (/* inlined export .Change.Update */0) && fiber.native) {
+        var _fiber_previous;
+        updateNativeElement(fiber.native, (_fiber_previous = fiber.previous) === null || _fiber_previous === void 0 ? void 0 : _fiber_previous.props, fiber.props);
+    } else if (fiber.change === (/* inlined export .Change.Delete */2) && parent) {
+        if (fiber.native && eventListeners.has(fiber.native)) {
+            eventListeners.delete(fiber.native); // Clean up event listener tracking.
+        }
+        if (parent.native) {
+            commitDeletion(fiber, parent.native);
+        }
+    }
+    addRefs(fiber, currentComponent);
+    if (fiber.child) {
+        commitFiber(fiber.child, currentComponent);
+    }
+    if (fiber.sibling) {
+        commitFiber(fiber.sibling, currentComponent);
+    }
+}
+
+// EXTERNAL MODULE: ./node_modules/epic-jsx/component.ts + 1 modules
+var epic_jsx_component = __webpack_require__(71);
+;// CONCATENATED MODULE: ./node_modules/epic-jsx/render.ts
+
+
+
+
+const Renderer = {
+    context: undefined,
+    effects: [],
+    current: undefined
+};
+function commit(context, fiber) {
+    for (const currentFiber of context.deletions){
+        commitFiber(currentFiber);
+        if (typeof currentFiber.type === 'function' && typeof currentFiber.endListener === 'function') {
+            currentFiber.endListener();
+        }
+    }
+    context.deletions.length = 0;
+    if (fiber.child) {
+        commitFiber(fiber.child);
+    }
+    // TODO check if dependencies changed.
+    if (Renderer.effects.length > 0) {
+        for (const effect of Renderer.effects){
+            effect();
+        }
+        Renderer.effects.length = 0;
+    }
+}
+function deleteAllFiberSiblings(context, node) {
+    if (!node) {
+        return;
+    }
+    node.change = (/* inlined export .Change.Delete */2);
+    context.deletions.push(node);
+    if (node === null || node === void 0 ? void 0 : node.sibling) {
+        deleteAllFiberSiblings(context, node.sibling);
+    }
+}
+// Loops flat through all the siblings of the previous child of the node passed.
+function reconcileChildren(context, current) {
+    let children = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
+    var _current_previous;
+    let index = 0;
+    let previous = (_current_previous = current.previous) === null || _current_previous === void 0 ? void 0 : _current_previous.child;
+    let previousSibling;
+    let maxTries = 500;
+    // TODO compare children.length to previous element length.
+    while((index < children.length || previous) && maxTries > 0){
+        maxTries -= 1;
+        const element = children[index];
+        let newFiber;
+        // TODO also compare props.
+        const fragment = element === null || previous === null;
+        const isSameType = !fragment && (element === null || element === void 0 ? void 0 : element.type) === (previous === null || previous === void 0 ? void 0 : previous.type);
+        if (previous && !isSameType) {
+            // Delete the old node and its children when types don't match
+            deleteChildren(context, previous);
+        }
+        if (isSameType && previous) {
+            newFiber = (0,epic_jsx_component/* .updateFiber */.Mo)(current, previous, element);
+        } else if (element) {
+            // Create new fiber for different types or new elements
+            newFiber = (0,epic_jsx_component/* .addFiber */.qF)(current, element, previous);
+        }
+        const item = previous;
+        if (previous) {
+            previous = previous.sibling;
+        }
+        if (index === 0) {
+            current.child = newFiber;
+        } else if (element && previousSibling) {
+            previousSibling.sibling = newFiber;
+        }
+        previousSibling = newFiber;
+        index += 1;
+        // NOTE added to prevent endless loop after state update to component.
+        if (index > children.length) {
+            // Remove additional nodes no longer present in tree.
+            deleteAllFiberSiblings(context, previous ?? item);
+            previous = undefined;
+        }
+    }
+    if (maxTries === 0) {
+        (0,helper/* .log */.Rm)('Ran out of tries at reconcileChildren.', 'warning');
+    }
+}
+function deleteChildren(context, fiber) {
+    if (fiber.change === (/* inlined export .Change.Delete */2)) {
+        return;
+    }
+    fiber.change = (/* inlined export .Change.Delete */2);
+    context.deletions.push(fiber);
+    if (fiber.child) {
+        deleteChildren(context, fiber.child);
+    }
+    if (fiber.sibling) {
+        deleteChildren(context, fiber.sibling);
+    }
+}
+function propsChanged(nextProps, previousProps) {
+    if (!previousProps) {
+        return true;
+    }
+    const nextKeys = Object.keys(nextProps).filter((key)=>key !== 'children');
+    const prevKeys = Object.keys(previousProps).filter((key)=>key !== 'children');
+    if (nextKeys.length !== prevKeys.length) {
+        return true;
+    }
+    for (const key of nextKeys){
+        const nextVal = nextProps[key];
+        const prevVal = previousProps[key];
+        // Handle functions - compare by reference
+        if (typeof nextVal === 'function') {
+            if (nextVal !== prevVal) {
+                return true;
+            }
+            continue;
+        }
+        // Handle objects and arrays
+        if (typeof nextVal === 'object' && nextVal !== null) {
+            if (Array.isArray(nextVal)) {
+                if (!Array.isArray(prevVal) || nextVal.length !== prevVal.length) {
+                    return true;
+                }
+                for(let i = 0; i < nextVal.length; i++){
+                    if (nextVal[i] !== prevVal[i]) {
+                        return true;
+                    }
+                }
+            } else if (!propsChanged(nextVal, prevVal)) {
+                return true;
+            }
+            continue;
+        }
+        // Handle primitives
+        if (nextVal !== prevVal) {
+            return true;
+        }
+    }
+    // Deep child comparison.
+    const nextChildren = nextProps.children;
+    const prevChildren = previousProps.children;
+    // Handle undefined/null cases
+    if (!nextChildren !== !prevChildren) {
+        return true;
+    }
+    // Compare arrays of children
+    if (Array.isArray(nextChildren) && Array.isArray(prevChildren)) {
+        if (nextChildren.length !== prevChildren.length) {
+            return true;
+        }
+        return nextChildren.some((nextChild, index)=>{
+            const prevChild = prevChildren[index];
+            // Handle null/undefined cases
+            if (!nextChild !== !prevChild) {
+                return true;
+            }
+            // If both are objects (likely Fibers or Elements), compare their properties
+            if (typeof nextChild === 'object' && typeof prevChild === 'object' && nextChild && prevChild) {
+                if (typeof nextChild.type === 'string' && typeof prevChild.type === 'string') {
+                    return true;
+                }
+                return nextChild.type !== prevChild.type || propsChanged(nextChild.props || {}, prevChild.props || {});
+            }
+            // Fallback to reference equality for primitives
+            return nextChild !== prevChild;
+        });
+    }
+    // Compare single child with deep comparison
+    if (typeof nextChildren === 'object' && typeof prevChildren === 'object' && nextChildren && prevChildren) {
+        return nextChildren.type !== prevChildren.type || propsChanged(nextChildren.props || {}, prevChildren.props || {});
+    }
+    return nextChildren !== prevChildren;
+}
+function updateFunctionComponent(context, fiber) {
+    if (typeof fiber.type !== 'function') {
+        return;
+    }
+    if (typeof fiber.hooks === 'undefined') {
+        fiber.hooks = [];
+    }
+    fiber.hooks.length = 0;
+    Renderer.context = context;
+    const componentData = (0,epic_jsx_component/* .createComponent */.a0)({
+        fiber,
+        context
+    });
+    fiber.component = componentData.component;
+    Renderer.current = fiber;
+    if (Array.isArray(fiber.props.children) && fiber.props.children.length === 0) {
+        // biome-ignore lint/performance/noDelete: Clean up meaningless props.
+        delete fiber.props.children;
+    }
+    let children = [];
+    try {
+        children = [
+            fiber.type.call(fiber.component, fiber.props)
+        ];
+    } catch (error) {
+        if (error.message === 'plugin' && componentData.pluginResult) {
+            children = [
+                componentData.pluginResult
+            ];
+        }
+    }
+    Renderer.current = undefined;
+    Renderer.context = undefined;
+    reconcileChildren(context, fiber, children.flat());
+}
+function updateHostComponent(context, fiber) {
+    var _fiber_props;
+    if (!fiber.native) {
+        fiber.native = createNativeElement(fiber);
+    }
+    // Flattening children to make arrays work.
+    reconcileChildren(context, fiber, (_fiber_props = fiber.props) === null || _fiber_props === void 0 ? void 0 : _fiber_props.children.flat());
+}
+function render(context, fiber) {
+    let isFirst = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : false;
+    const isFunctionComponent = fiber.type instanceof Function;
+    if (isFunctionComponent) {
+        var _fiber_previous;
+        if (isFirst || propsChanged(fiber.props, (_fiber_previous = fiber.previous) === null || _fiber_previous === void 0 ? void 0 : _fiber_previous.props)) {
+            updateFunctionComponent(context, fiber);
+        }
+    } else {
+        updateHostComponent(context, fiber);
+    }
+    if (fiber.child) {
+        return fiber.child;
+    }
+    let nextFiber = fiber;
+    let maxTries = 500;
+    while(nextFiber && maxTries > 0){
+        maxTries -= 1;
+        if (nextFiber.sibling) {
+            return nextFiber.sibling;
+        }
+        nextFiber = nextFiber.parent;
+    }
+    if (maxTries === 0) {
+        (0,helper/* .log */.Rm)('Ran out of tries at render.', 'warning');
+    }
+    return;
+}
+function process(deadline, context) {
+    if (!context.current && context.pending.length === 0) {
+        (0,helper/* .log */.Rm)('Trying to process an empty queue');
+        return;
+    }
+    if (!context.current) {
+        context.current = context.pending.shift();
+        if (context.current) {
+            context.rendered.push(context.current); // Rendered state only final when current empty.
+        }
+    }
+    context.afterListeners = [];
+    let shouldYield = false;
+    let maxTries = 5000 // Prevent infinite loop, long lists can take a lot of tries.
+    ;
+    while(context.current && !shouldYield && maxTries > 0){
+        maxTries -= 1;
+        // Render current fiber.
+        context.current = render(context, context.current, maxTries === 4999);
+        // Add next fiber if previous tree finished.
+        if (!context.current && context.pending.length > 0) {
+            context.current = context.pending.shift();
+            if (context.current) {
+                context.rendered.push(context.current);
+            }
+        }
+        // Yield current rendering cycle if out of time.
+        shouldYield = deadline.timeRemaining() < 1;
+    }
+    if (maxTries === 0) {
+        (0,helper/* .log */.Rm)('Ran out of tries at process.', 'warning');
+    }
+    // Yielded if context.current not empty.
+    if (!context.current && context.rendered.length > 0) {
+        for (const fiber of context.rendered){
+            commit(context, fiber);
+        }
+        if (context.afterListeners) {
+            for (const callback of context.afterListeners){
+                callback.call(null);
+            }
+            context.afterListeners = [];
+        }
+        context.rendered.length = 0;
+    }
+    if (context.current || context.pending.length > 0) {
+        (0,helper/* .schedule */._)((nextDeadline)=>process(nextDeadline, context));
+    }
+}
+const processNow = (context)=>process({
+        timeRemaining: ()=>99999,
+        didTimeout: false
+    }, context);
+
+
+},
+340(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
   Gv: () => (isObject),
@@ -1008,9 +1722,9 @@ __webpack_require__.d(__webpack_exports__, {
   xe: () => (isLeaf),
   zi: () => (needsRegister)
 });
-/* ESM import */var logua__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(109);
+/* import */ var logua__rspack_import_0 = __webpack_require__(477);
 
-const log = (0,logua__WEBPACK_IMPORTED_MODULE_0__/* .create */.v)('epic-state', 'red');
+const log = (0,logua__rspack_import_0/* .create */.v)('epic-state', 'red');
 const isObject = (x)=>typeof x === 'object' && x !== null;
 const listGetters = (input)=>{
     const descriptors = Object.getOwnPropertyDescriptors(input);
@@ -1110,8 +1824,8 @@ function multipleInstancesWarning() {
 }
 
 
-}),
-966: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+},
+979(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
@@ -1119,14 +1833,14 @@ __webpack_require__.d(__webpack_exports__, {
   wk: () => (/* binding */ epic_state_state)
 });
 
-// UNUSED EXPORTS: observe, ref, set, setTo, remove, batch, load, removeAllPlugins, toggle, list, setValue, plugin, run
+// UNUSED EXPORTS: ref, removeAllPlugins, remove, plugin
 
-// EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts + 4 modules
-var epic_jsx = __webpack_require__(451);
+// EXTERNAL MODULE: ./node_modules/epic-jsx/render.ts + 1 modules
+var render = __webpack_require__(637);
 // EXTERNAL MODULE: ./node_modules/epic-state/helper.ts
-var helper = __webpack_require__(459);
+var helper = __webpack_require__(340);
 // EXTERNAL MODULE: ./node_modules/epic-state/plugin.ts
-var epic_state_plugin = __webpack_require__(576);
+var epic_state_plugin = __webpack_require__(739);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/batching.ts
 
 
@@ -1439,8 +2153,6 @@ function derive(proxy) {
     return proxy;
 }
 
-// EXTERNAL MODULE: ./node_modules/epic-state/types.ts + 1 modules
-var types = __webpack_require__(117);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/index.ts
  // TODO import should be optional and not required, pass along with connect.
 
@@ -1463,8 +2175,8 @@ const renderStateMap = new Map();
 function epic_state_state() {
     let initialObject = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {}, parent = arguments.length > 1 ? arguments[1] : void 0, root = arguments.length > 2 ? arguments[2] : void 0;
     var _Renderer_current, _Renderer_current1;
-    if (((_Renderer_current = epic_jsx/* .Renderer.current */.A4.current) === null || _Renderer_current === void 0 ? void 0 : _Renderer_current.id) && renderStateMap.has(epic_jsx/* .Renderer.current.id */.A4.current.id)) {
-        return renderStateMap.get(epic_jsx/* .Renderer.current.id */.A4.current.id);
+    if (((_Renderer_current = render/* .Renderer.current */.A4.current) === null || _Renderer_current === void 0 ? void 0 : _Renderer_current.id) && renderStateMap.has(render/* .Renderer.current.id */.A4.current.id)) {
+        return renderStateMap.get(render/* .Renderer.current.id */.A4.current.id);
     }
     let initialization = true;
     if (typeof initialObject === 'function') {
@@ -1513,7 +2225,7 @@ function epic_state_state() {
             const value = Reflect.get(target, property, receiver);
             if (!initialization && typeof value !== 'function') {
                 (0,epic_state_plugin/* .callPlugins */.n0)({
-                    type: types/* .PluginAction.Get */.w.Get,
+                    type: (/* inlined export .PluginAction.Get */"get"),
                     target: receiver,
                     initial: true,
                     property,
@@ -1598,7 +2310,7 @@ function epic_state_state() {
             if (!initialization) {
                 isTracked(root ?? receiver, property); // Mark changed values as "dirty" before plugins (rerenders).
                 scheduleUpdate({
-                    type: types/* .PluginAction.Set */.w.Set,
+                    type: (/* inlined export .PluginAction.Set */"set"),
                     target: receiver,
                     initial: true,
                     property,
@@ -1616,7 +2328,7 @@ function epic_state_state() {
             if (deleted) {
                 // TODO no receiver, no parent access?
                 scheduleUpdate({
-                    type: types/* .PluginAction.Delete */.w.Delete,
+                    type: (/* inlined export .PluginAction.Delete */"delete"),
                     target: target,
                     initial: true,
                     property,
@@ -1633,8 +2345,8 @@ function epic_state_state() {
         baseObject
     ];
     proxyStateMap.set(proxyObject, proxyState);
-    if ((_Renderer_current1 = epic_jsx/* .Renderer.current */.A4.current) === null || _Renderer_current1 === void 0 ? void 0 : _Renderer_current1.id) {
-        renderStateMap.set(epic_jsx/* .Renderer.current.id */.A4.current.id, proxyObject);
+    if ((_Renderer_current1 = render/* .Renderer.current */.A4.current) === null || _Renderer_current1 === void 0 ? void 0 : _Renderer_current1.id) {
+        renderStateMap.set(render/* .Renderer.current.id */.A4.current.id, proxyObject);
     }
     for (const key of Reflect.ownKeys(initialObject)){
         const desc = Object.getOwnPropertyDescriptor(initialObject, key);
@@ -1666,15 +2378,14 @@ function remove(proxyObject) {
 }
 
 
-}),
-576: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+},
+739(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
   IQ: () => (plugin),
   n0: () => (callPlugins),
   pI: () => (initializePlugins)
 });
-/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(117);
 
 const globalPlugins = [];
 function initializePlugins(state, plugin) {
@@ -1694,7 +2405,7 @@ function callPlugins(param) {
     if (target._plugin) {
         for (const item of target._plugin){
             const plugin = item[type];
-            if (plugin && (item.all || options.leaf || type === _types__WEBPACK_IMPORTED_MODULE_0__/* .PluginAction.Delete */.w.Delete)) {
+            if (plugin && (item.all || options.leaf || type === (/* inlined export .PluginAction.Delete */"delete"))) {
                 // @ts-ignore Apply can also be used on arrow functions to override the this.
                 plugin.call(item, options);
             }
@@ -1715,7 +2426,7 @@ function callPlugins(param) {
     // Global plugins.
     for (const item of globalPlugins){
         const plugin = item[type];
-        if (plugin && (item.all || options.leaf || type === _types__WEBPACK_IMPORTED_MODULE_0__/* .PluginAction.Delete */.w.Delete)) {
+        if (plugin && (item.all || options.leaf || type === (/* inlined export .PluginAction.Delete */"delete"))) {
             // @ts-ignore
             plugin.call(item, options);
         }
@@ -1735,121 +2446,25 @@ function removeAllPlugins() {
 } // TODO destroy an existing state object and it's associated plugins.
 
 
-}),
-730: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-"use strict";
-__webpack_require__.d(__webpack_exports__, {
-  N: () => (connect)
-});
-/* ESM import */var epic_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(451);
-/* ESM import */var _helper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(459);
-/* ESM import */var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(117);
-
-
-
-const connections = [];
-function debug() {
-    const lines = [];
-    for (const [index, observedProperties] of connections.entries()){
-        const keys = observedProperties.list();
-        let line = '';
-        line += `connect() ${index} - `;
-        for (const key of keys){
-            line += `State #${key[0]}: `;
-            const properties = [
-                ...key[1].entries()
-            ];
-            for (const property of properties){
-                line += `"${String(property[0])}"`;
-                const components = property[1];
-                for (const component of components){
-                    line += ` ${component.id} `;
-                }
-            }
-        }
-        lines.push(line);
-    }
-    return lines.join('\n');
-}
-const connect = (initialize)=>{
-    if (initialize !== 'initialize') {
-        (0,_helper__WEBPACK_IMPORTED_MODULE_0__/* .log */.Rm)('connect plugin cannot be configured', 'warning');
-    }
-    const observedProperties = new _types__WEBPACK_IMPORTED_MODULE_1__/* .TupleArrayMap */.g();
-    connections.push(observedProperties);
-    return {
-        set: (param)=>{
-            let { property, parent: { _id: id }, value, previousValue } = param;
-            if (value === previousValue) {
-                return;
-            }
-            const components = observedProperties.get(id, property);
-            // Remove, as get will be tracked again during render.
-            if (observedProperties.has(id, property)) {
-                observedProperties.delete(id, property);
-            }
-            // Trigger rerender on components.
-            const renderedComponents = new Set();
-            if (components) {
-                for (const component of components){
-                    // Check if already rendered
-                    if (!renderedComponents.has(component.id)) {
-                        component.rerender();
-                        renderedComponents.add(component.id); // Mark as rendered
-                    }
-                }
-            }
-            // TODO This will trigger a rerender, probably better to add an interface specific to this.
-            (0,epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .getRoots */.ug)();
-        },
-        get: (param)=>{
-            let { property, parent: { _id: id } } = param;
-            if (!epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.A4.current) {
-                return; // Accessed outside a component.
-            }
-            const { component } = epic_jsx__WEBPACK_IMPORTED_MODULE_2__/* .Renderer.current */.A4.current;
-            if (!(component === null || component === void 0 ? void 0 : component.rerender)) {
-                (0,_helper__WEBPACK_IMPORTED_MODULE_0__/* .log */.Rm)('Cannot rerender epic-jsx component', 'warning');
-                return;
-            }
-            // Register rerender on current component.
-            if (observedProperties.has(id, property)) {
-                const components = observedProperties.get(id, property);
-                const alreadyRegistered = components === null || components === void 0 ? void 0 : components.some((value)=>value.id === component.id);
-                if (!alreadyRegistered) {
-                    components === null || components === void 0 ? void 0 : components.push(component);
-                }
-            } else {
-                observedProperties.add(id, property, component);
-            }
-        },
-        delete: ()=>{
-        // TODO remove observation and trigger rerender
-        }
-    };
-};
-
-
-}),
-117: (function (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+},
+599(__unused_rspack_module, __webpack_exports__, __webpack_require__) {
 "use strict";
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  w: () => (/* binding */ types_PluginAction),
-  g: () => (/* binding */ TupleArrayMap)
+  N: () => (/* binding */ connect)
 });
 
-;// CONCATENATED MODULE: ./node_modules/@swc/helpers/esm/_define_property.js
-function _define_property(obj, key, value) {
-    if (key in obj) {
-        Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
-    } else obj[key] = value;
+// UNUSED EXPORTS: debug
 
-    return obj;
-}
-
-
+// EXTERNAL MODULE: ./node_modules/epic-jsx/index.ts
+var epic_jsx = __webpack_require__(510);
+// EXTERNAL MODULE: ./node_modules/epic-jsx/render.ts + 1 modules
+var render = __webpack_require__(637);
+// EXTERNAL MODULE: ./node_modules/epic-state/helper.ts
+var helper = __webpack_require__(340);
+// EXTERNAL MODULE: ./node_modules/@swc/helpers/esm/_define_property.js
+var _define_property = __webpack_require__(467);
 ;// CONCATENATED MODULE: ./node_modules/epic-state/types.ts
 
 var types_PluginAction = /*#__PURE__*/ function(PluginAction) {
@@ -1895,18 +2510,120 @@ class TupleArrayMap {
         ];
     }
     constructor(){
-        _define_property(this, "observedProperties", new Map());
+        (0,_define_property._)(this, "observedProperties", new Map());
     }
 }
 
+;// CONCATENATED MODULE: ./node_modules/epic-state/plugin/epic-jsx.ts
 
-}),
-109: (function (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+
+const connections = [];
+function debug() {
+    const lines = [];
+    for (const [index, observedProperties] of connections.entries()){
+        const keys = observedProperties.list();
+        let line = '';
+        line += `connect() ${index} - `;
+        for (const key of keys){
+            line += `State #${key[0]}: `;
+            const properties = [
+                ...key[1].entries()
+            ];
+            for (const property of properties){
+                line += `"${String(property[0])}"`;
+                const components = property[1];
+                for (const component of components){
+                    line += ` ${component.id} `;
+                }
+            }
+        }
+        lines.push(line);
+    }
+    return lines.join('\n');
+}
+const connect = (initialize)=>{
+    if (initialize !== 'initialize') {
+        (0,helper/* .log */.Rm)('connect plugin cannot be configured', 'warning');
+    }
+    const observedProperties = new TupleArrayMap();
+    connections.push(observedProperties);
+    return {
+        set: (param)=>{
+            let { property, parent: { _id: id }, value, previousValue } = param;
+            if (value === previousValue) {
+                return;
+            }
+            const components = observedProperties.get(id, property);
+            // Remove, as get will be tracked again during render.
+            if (observedProperties.has(id, property)) {
+                observedProperties.delete(id, property);
+            }
+            // Trigger rerender on components.
+            const renderedComponents = new Set();
+            if (components) {
+                for (const component of components){
+                    // Check if already rendered
+                    if (!renderedComponents.has(component.id)) {
+                        component.rerender();
+                        renderedComponents.add(component.id); // Mark as rendered
+                    }
+                }
+            }
+            // TODO This will trigger a rerender, probably better to add an interface specific to this.
+            (0,epic_jsx/* .getRoots */.ug)();
+        },
+        get: (param)=>{
+            let { property, parent: { _id: id } } = param;
+            if (!render/* .Renderer.current */.A4.current) {
+                return; // Accessed outside a component.
+            }
+            const { component } = render/* .Renderer.current */.A4.current;
+            if (!(component === null || component === void 0 ? void 0 : component.rerender)) {
+                (0,helper/* .log */.Rm)('Cannot rerender epic-jsx component', 'warning');
+                return;
+            }
+            // Register rerender on current component.
+            if (observedProperties.has(id, property)) {
+                const components = observedProperties.get(id, property);
+                const alreadyRegistered = components === null || components === void 0 ? void 0 : components.some((value)=>value.id === component.id);
+                if (!alreadyRegistered) {
+                    components === null || components === void 0 ? void 0 : components.push(component);
+                }
+            } else {
+                observedProperties.add(id, property, component);
+            }
+        },
+        delete: ()=>{
+        // TODO remove observation and trigger rerender
+        }
+    };
+};
+
+
+},
+467(__unused_rspack___webpack_module__, __webpack_exports__, __webpack_require__) {
+"use strict";
+__webpack_require__.d(__webpack_exports__, {
+  _: () => (_define_property)
+});
+function _define_property(obj, key, value) {
+    if (key in obj) {
+        Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
+    } else obj[key] = value;
+
+    return obj;
+}
+
+
+
+},
+477(__unused_rspack___webpack_module__, __webpack_exports__, __webpack_require__) {
 "use strict";
 __webpack_require__.d(__webpack_exports__, {
   v: () => (create)
 });
-/* ESM import */var debounce__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(334);
+/* import */ var debounce__rspack_import_0 = __webpack_require__(334);
 // index.ts
 
 
@@ -1992,7 +2709,7 @@ var create = (name, color = "gray", newLine = false) => {
     if (typeof options === "object" && options.group) {
       if (!Groups.has(options.group)) {
         Groups.set(options.group, {
-          handler: debounce__WEBPACK_IMPORTED_MODULE_0__(groupLog, options.timeout || 50),
+          handler: debounce__rspack_import_0(groupLog, options.timeout || 50),
           count: 1
         });
       } else {
@@ -2008,6 +2725,6 @@ var create = (name, color = "gray", newLine = false) => {
 //# sourceMappingURL=index.js.map
 
 
-}),
+},
 
 }]);
